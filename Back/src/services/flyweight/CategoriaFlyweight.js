@@ -1,0 +1,11 @@
+class CategoriaFlyweight {
+    constructor(nombre) {
+        this.nombre = nombre;
+    }
+
+    getNombre() {
+        return this.nombre;
+    }
+}
+
+module.exports = CategoriaFlyweight;

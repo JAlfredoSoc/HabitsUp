@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "HabitsUp API",
+    "description": "Pruebas locales del backend HabitsUp. Ejecuta primero Registro de usuario y luego Crear hábito; la colección guarda automáticamente usuarioId y habitoId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "usuarioId", "value": "" },
+    { "key": "habitoId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Estado",
+      "item": [
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" }
+        },
+        {
+          "name": "Documentación Swagger",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api-docs" }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Registro de usuario",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('correoPrueba', 'usuario.prueba.' + Date.now() + '@example.com');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.usuario && body.usuario._id) pm.collectionVariables.set('usuarioId', body.usuario._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Prueba\",\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"Prueba123!\",\n  \"edad\": \"25\",\n  \"telefono\": \"3001234567\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/RegistroUsuario"
+          }
+        },
+        {
+          "name": "Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"Prueba123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/IniciarSesion"
+          }
+        },
+        {
+          "name": "Editar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Prueba Actualizado\",\n  \"telefono\": \"3007654321\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/EditarUsuario/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "Hábitos del usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/usuario/{{usuarioId}}/habitos" }
+        },
+        {
+          "name": "Total de hábitos activos",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/totalHabitosActivos/{{usuarioId}}" }
+        },
+        {
+          "name": "Historial del usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/historial/{{usuarioId}}" }
+        },
+        {
+          "name": "Estadísticas del usuario",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/estadisticas/{{usuarioId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Hábitos",
+      "item": [
+        {
+          "name": "Obtener categorías",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerCategoria" }
+        },
+        {
+          "name": "Obtener sugerencias",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerSugerencias" }
+        },
+        {
+          "name": "Crear hábito",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "if (pm.response.code === 201) {",
+                "  const body = pm.response.json();",
+                "  if (body.habito && body.habito._id) pm.collectionVariables.set('habitoId', body.habito._id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Leer 10 minutos\",\n  \"descripcion\": \"Leer un libro durante 10 minutos\",\n  \"estado\": \"pendiente\",\n  \"horario\": \"2026-10-01T08:00:00.000Z\",\n  \"fechaInicio\": \"2026-09-28T00:00:00.000Z\",\n  \"fechaFin\": \"2026-12-31T23:59:59.000Z\",\n  \"periodo\": \"diario\",\n  \"frecuencia\": 1,\n  \"frecuenciaSemanal\": 5,\n  \"diasSeleccionados\": [\"Lunes\", \"Martes\", \"Miércoles\", \"Jueves\", \"Viernes\"],\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"notificacionActiva\": false,\n  \"subHabitos\": []\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/CrearHabitos"
+          }
+        },
+        {
+          "name": "Obtener hábitos (usuarioID)",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerHabitos/{{usuarioId}}" }
+        },
+        {
+          "name": "Actualizar progreso",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/ActualizarProgreso/{{habitoId}}"
+          }
+        },
+        {
+          "name": "Clonar hábito",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/clonar/{{habitoId}}"
+          }
+        },
+        {
+          "name": "Editar hábito",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Leer 15 minutos\",\n  \"descripcion\": \"Leer un libro durante 15 minutos\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/editar/{{habitoId}}"
+          }
+        },
+        {
+          "name": "Eliminar hábito",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/eliminar/{{habitoId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
