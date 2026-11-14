@@ -17,10 +17,25 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
+    let valorLimpio = value;
+
+    // Restricciones en tiempo real para evitar caracteres inválidos
+    if (name === 'telefono') {
+      // Solo permite dígitos numéricos (0-9) y máximo 10 caracteres (número celular estándar)
+      valorLimpio = value.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'edad') {
+      // Solo permite dígitos numéricos y máximo 3 dígitos
+      valorLimpio = value.replace(/\D/g, '').slice(0, 3);
+    } else if (name === 'nombre') {
+      // Permite letras, espacios, acentos y guiones (bloquea números y símbolos)
+      valorLimpio = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, '');
+    }
+
     setDatosFormulario({
       ...datosFormulario,
-      [name]: value
+      [name]: valorLimpio
     });
+
     // Limpiar errores cuando el usuario escribe
     if (error) setError('');
     if (exito) setExito('');
@@ -28,30 +43,52 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
-    setCargando(true);
     setError('');
     setExito('');
 
-    // Validar edad (opcional)
-    if (parseInt(datosFormulario.edad) < 18) {
-      setError('Debes ser mayor de 18 años para registrarte');
-      setCargando(false);
+    // Validaciones estrictas antes de enviar
+    const nombreLimpio = datosFormulario.nombre.trim();
+    if (nombreLimpio.length < 2) {
+      setError('El nombre debe tener al menos 2 caracteres.');
       return;
     }
 
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regexEmail.test(datosFormulario.correo.trim())) {
+      setError('Por favor, ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (datosFormulario.contrasena.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    const edadNum = parseInt(datosFormulario.edad, 10);
+    if (isNaN(edadNum) || edadNum < 18 || edadNum > 120) {
+      setError('Debes ingresar una edad válida entre 18 y 120 años.');
+      return;
+    }
+
+    if (!/^\d{7,10}$/.test(datosFormulario.telefono)) {
+      setError('El número de teléfono debe contener solo números (entre 7 y 10 dígitos).');
+      return;
+    }
+
+    setCargando(true);
+
     // Llamar al servicio de registro
     const resultado = await registrarUsuario(
-      datosFormulario.nombre,
-      datosFormulario.correo,
+      nombreLimpio,
+      datosFormulario.correo.trim().toLowerCase(),
       datosFormulario.contrasena,
-      datosFormulario.edad,
+      String(edadNum),
       datosFormulario.telefono
     );
 
     if (resultado.success) {
       // Registro exitoso
       setExito('¡Registro exitoso! Redirigiendo al inicio de sesión...');
-      console.log('Usuario registrado:', resultado.data);
       
       // Limpiar formulario
       setDatosFormulario({
@@ -62,16 +99,16 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
         telefono: ''
       });
       
-      // Cerrar modal de registro y abrir modal de inicio de sesión después de 2 segundos
+      // Cerrar modal de registro y abrir modal de inicio de sesión después de 1.8 segundos
       setTimeout(() => {
         cerrarModal();
         if (abrirModalInicioSesion) {
           abrirModalInicioSesion();
         }
-      }, 2000);
+      }, 1800);
     } else {
-      // Mostrar mensaje de error
-      setError(resultado.message);
+      // Mostrar mensaje de error del backend
+      setError(resultado.message || 'Error al registrar el usuario');
     }
 
     setCargando(false);
@@ -139,7 +176,7 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
           </div>
         )}
 
-        <form onSubmit={manejarEnvio}>
+        <form onSubmit={manejarEnvio} noValidate>
           <div className="mb-3">
             <label htmlFor="nombre" className="form-label">
               Nombre <span className="text-danger">*</span>
@@ -154,7 +191,9 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
               onChange={manejarCambio}
               required
               disabled={cargando}
+              autoComplete="name"
             />
+            <small className="text-muted">Solo letras y espacios</small>
           </div>
 
           <div className="mb-3">
@@ -166,11 +205,12 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
               className="form-control"
               id="correo"
               name="correo"
-              placeholder="Ingrese su correo electrónico"
+              placeholder="ejemplo@correo.com"
               value={datosFormulario.correo}
               onChange={manejarCambio}
               required
               disabled={cargando}
+              autoComplete="email"
             />
           </div>
 
@@ -183,12 +223,13 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
               className="form-control"
               id="contrasena"
               name="contrasena"
-              placeholder="Ingrese su contraseña"
+              placeholder="Mínimo 6 caracteres"
               value={datosFormulario.contrasena}
               onChange={manejarCambio}
               required
               disabled={cargando}
               minLength="6"
+              autoComplete="new-password"
             />
             <small className="text-muted">Mínimo 6 caracteres</small>
           </div>
@@ -198,18 +239,20 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
               Edad <span className="text-danger">*</span>
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength="3"
               className="form-control"
               id="edad"
               name="edad"
-              placeholder="Ingrese su edad"
+              placeholder="Ej: 25"
               value={datosFormulario.edad}
               onChange={manejarCambio}
               required
               disabled={cargando}
-              min="1"
-              max="120"
             />
+            <small className="text-muted">Debe ser mayor de 18 años (solo números)</small>
           </div>
 
           <div className="mb-4">
@@ -218,21 +261,26 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength="10"
               className="form-control"
               id="telefono"
               name="telefono"
-              placeholder="Ingrese su número de teléfono"
+              placeholder="Ej: 3001234567"
               value={datosFormulario.telefono}
               onChange={manejarCambio}
               required
               disabled={cargando}
+              autoComplete="tel"
             />
+            <small className="text-muted">Solo números (entre 7 y 10 dígitos, sin espacios ni letras)</small>
           </div>
 
           <div className="d-grid mb-3">
             <button 
               type="submit" 
-              className="btn btn-primary"
+              className="btn btn-primary py-2 fw-semibold"
               disabled={cargando}
             >
               {cargando ? (

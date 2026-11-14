@@ -2,6 +2,7 @@ const Usuario = require("../models/usuario.model");
 const Habito = require("../models/habito.model");
 const Progreso = require("../models/progresoHabito.model");
 const mongoose = require("mongoose");
+const ValidacionesUsuario = require("../helper/validacionesUsuario");
 
 const bcrypt = require("bcrypt");
 
@@ -10,25 +11,42 @@ class UsuarioController {
   async registrarUsuario(req, res) {
     try {
       const { nombre, correo, contrasena, edad, telefono } = req.body;
-      // Verificar si ya existe el usuario
-      const existe = await Usuario.findOne({ correo });
-      if (existe) {
+
+      // Validar datos de entrada con restricciones estrictas
+      const validacion = ValidacionesUsuario.validarDatosRegistro({
+        nombre,
+        correo,
+        contrasena,
+        edad,
+        telefono,
+      });
+
+      if (!validacion.valido) {
         return res.status(400).json({
+          message: validacion.errores[0],
+          errores: validacion.errores,
+        });
+      }
+
+      // Verificar si ya existe el usuario
+      const correoNormalizado = correo.trim().toLowerCase();
+      const existe = await Usuario.findOne({ correo: correoNormalizado });
+      if (existe) {
+        return res.status(409).json({
           message: "El correo ya está registrado",
         });
       }
 
       // Encriptar contraseña
-      const saltRounds = 10;
-      const contrasenaHash = await bcrypt.hash(contrasena, saltRounds);
+      const contrasenaHash = await ValidacionesUsuario.hashearPassword(contrasena);
 
       // Crear usuario con contraseña encriptada
       const nuevoUsuario = new Usuario({
-        nombre,
-        correo,
+        nombre: nombre.trim(),
+        correo: correoNormalizado,
         contrasena: contrasenaHash, // Guardar hash, no la contraseña original
-        edad: edad,
-        telefono,
+        edad: String(edad).trim(),
+        telefono: String(telefono).trim(),
       });
 
       const usuarioGuardado = await nuevoUsuario.save();
@@ -62,7 +80,7 @@ class UsuarioController {
         });
       }
 
-      const usuario = await Usuario.findOne({ correo });
+      const usuario = await Usuario.findOne({ correo: correo.trim().toLowerCase() });
 
       if (!usuario) {
         return res.status(404).json({
@@ -71,7 +89,7 @@ class UsuarioController {
       }
 
       // Comparar contraseña con el hash
-      const contrasenaValida = await bcrypt.compare(
+      const contrasenaValida = await ValidacionesUsuario.verificarPassword(
         contrasena,
         usuario.contrasena,
       );
@@ -100,12 +118,36 @@ class UsuarioController {
   async editarUsuario(req, res) {
     try {
       const { usuarioID } = req.params;
-      const datos = req.body;
+      const datos = { ...req.body };
+
+      const validacion = ValidacionesUsuario.validarDatosEdicion(datos);
+      if (!validacion.valido) {
+        return res.status(400).json({
+          message: validacion.errores[0],
+          errores: validacion.errores,
+        });
+      }
+
+      if (datos.correo) {
+        datos.correo = datos.correo.trim().toLowerCase();
+        const existeOtro = await Usuario.findOne({
+          correo: datos.correo,
+          _id: { $ne: usuarioID },
+        });
+        if (existeOtro) {
+          return res.status(409).json({ message: "El correo ya está en uso por otro usuario" });
+        }
+      }
+
       if (datos.contrasena) {
-        datos.contrasena = await bcrypt.hash(datos.contrasena, 10);
+        datos.contrasena = await ValidacionesUsuario.hashearPassword(datos.contrasena);
       } else {
         delete datos.contrasena;
       }
+
+      if (datos.nombre) datos.nombre = datos.nombre.trim();
+      if (datos.telefono) datos.telefono = String(datos.telefono).trim();
+      if (datos.edad) datos.edad = String(datos.edad).trim();
 
       const usuarioActualizado = await Usuario.findByIdAndUpdate(
         usuarioID,

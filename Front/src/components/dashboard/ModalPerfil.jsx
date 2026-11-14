@@ -58,9 +58,19 @@ function ModalPerfil({ mostrar, cerrarModal }) {
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
+    let valorLimpio = value;
+
+    if (name === "telefono") {
+      valorLimpio = value.replace(/\D/g, "").slice(0, 10);
+    } else if (name === "edad") {
+      valorLimpio = value.replace(/\D/g, "").slice(0, 3);
+    } else if (name === "nombre") {
+      valorLimpio = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, "");
+    }
+
     setDatosPerfil({
       ...datosPerfil,
-      [name]: value,
+      [name]: valorLimpio,
     });
   };
 
@@ -275,10 +285,12 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               <div className="col-md-6">
                 <label className="form-label fw-semibold">Edad</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength="3"
                   className="form-control form-control-lg rounded-4"
                   name="edad"
-                  placeholder="Edad"
+                  placeholder="Ej: 25"
                   value={datosPerfil.edad}
                   onChange={manejarCambio}
                   disabled={!modoEdicion}
@@ -288,10 +300,12 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               <div className="col-md-6">
                 <label className="form-label fw-semibold">Teléfono</label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength="10"
                   className="form-control form-control-lg rounded-4"
                   name="telefono"
-                  placeholder="Teléfono"
+                  placeholder="Ej: 3001234567"
                   value={datosPerfil.telefono}
                   onChange={manejarCambio}
                   disabled={!modoEdicion}

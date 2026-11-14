@@ -16,6 +16,7 @@ describe("Módulo de Validación y Seguridad de Usuario (CP-07 a CP-11)", () => 
         correo: emailInvalido,
         contrasena: "123456",
         edad: "25",
+        telefono: "3001234567",
       });
 
       // Assert
@@ -38,6 +39,7 @@ describe("Módulo de Validación y Seguridad de Usuario (CP-07 a CP-11)", () => 
         correo: "usuario@example.test",
         contrasena: passwordCorta,
         edad: "25",
+        telefono: "3001234567",
       });
 
       // Assert
@@ -60,22 +62,38 @@ describe("Módulo de Validación y Seguridad de Usuario (CP-07 a CP-11)", () => 
       expect(esValida).to.be.true;
     });
 
-    // CP-10: Validación de edad negativa o no numérica
-    it("CP-10: Debe rechazar valores de edad negativos, nulos o no numéricos", () => {
+    // CP-10: Validación de edad negativa, menor de 18 o no numérica
+    it("CP-10: Debe rechazar valores de edad negativos, menores de 18 o no numéricos", () => {
       // Arrange
       const edadNegativa = -1;
+      const edadMenor = 17;
       const edadTexto = "veinte";
       const edadValida = 25;
 
       // Act
       const resNegativo = ValidacionesUsuario.validarEdad(edadNegativa);
+      const resMenor = ValidacionesUsuario.validarEdad(edadMenor);
       const resTexto = ValidacionesUsuario.validarEdad(edadTexto);
       const resValido = ValidacionesUsuario.validarEdad(edadValida);
 
       // Assert
       expect(resNegativo).to.be.false;
+      expect(resMenor).to.be.false;
       expect(resTexto).to.be.false;
       expect(resValido).to.be.true;
+    });
+
+    // Validación extra: Teléfono con letras
+    it("Debe rechazar números de teléfono que contengan letras o caracteres especiales", () => {
+      // Arrange
+      const telConLetras = "300abc1234";
+      const telCorto = "12345";
+      const telValido = "3001234567";
+
+      // Act & Assert
+      expect(ValidacionesUsuario.validarTelefono(telConLetras)).to.be.false;
+      expect(ValidacionesUsuario.validarTelefono(telCorto)).to.be.false;
+      expect(ValidacionesUsuario.validarTelefono(telValido)).to.be.true;
     });
   });
 
