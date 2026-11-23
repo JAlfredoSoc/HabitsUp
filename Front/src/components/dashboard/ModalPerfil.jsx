@@ -188,6 +188,10 @@ function ModalPerfil({ mostrar, cerrarModal }) {
       }}>
       <div
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mi Perfil"
+        data-testid="modal-perfil"
         style={{
           width: "100%",
           maxWidth: "650px",
@@ -253,8 +257,9 @@ function ModalPerfil({ mostrar, cerrarModal }) {
           <form onSubmit={manejarGuardar}>
             <div className="row g-3">
               <div className="col-12">
-                <label className="form-label fw-semibold">Nombre</label>
+                <label htmlFor="perfil-nombre" className="form-label fw-semibold">Nombre</label>
                 <input
+                  id="perfil-nombre"
                   type="text"
                   className="form-control form-control-lg rounded-4"
                   name="nombre"
@@ -267,10 +272,11 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               </div>
 
               <div className="col-12">
-                <label className="form-label fw-semibold">
+                <label htmlFor="perfil-correo" className="form-label fw-semibold">
                   Correo electrónico
                 </label>
                 <input
+                  id="perfil-correo"
                   type="email"
                   className="form-control form-control-lg rounded-4"
                   name="correo"
@@ -283,8 +289,9 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               </div>
 
               <div className="col-md-6">
-                <label className="form-label fw-semibold">Edad</label>
+                <label htmlFor="perfil-edad" className="form-label fw-semibold">Edad</label>
                 <input
+                  id="perfil-edad"
                   type="text"
                   inputMode="numeric"
                   maxLength="3"
@@ -298,8 +305,9 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               </div>
 
               <div className="col-md-6">
-                <label className="form-label fw-semibold">Teléfono</label>
+                <label htmlFor="perfil-telefono" className="form-label fw-semibold">Teléfono</label>
                 <input
+                  id="perfil-telefono"
                   type="tel"
                   inputMode="numeric"
                   maxLength="10"
@@ -313,8 +321,9 @@ function ModalPerfil({ mostrar, cerrarModal }) {
               </div>
 
               <div className="col-12">
-                <label className="form-label fw-semibold">Contraseña</label>
+                <label htmlFor="perfil-contrasena" className="form-label fw-semibold">Contraseña</label>
                 <input
+                  id="perfil-contrasena"
                   type="password"
                   className="form-control form-control-lg rounded-4"
                   name="contrasena"

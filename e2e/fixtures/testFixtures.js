@@ -4,6 +4,7 @@ const { RegisterPage } = require('../pages/RegisterPage');
 const { LoginPage } = require('../pages/LoginPage');
 const { DashboardPage } = require('../pages/DashboardPage');
 const { HabitoFormPage } = require('../pages/HabitoFormPage');
+const { ProfileModalPage } = require('../pages/ProfileModalPage');
 
 const test = base.test.extend({
   landingPage: async ({ page }, use) => {
@@ -20,6 +21,9 @@ const test = base.test.extend({
   },
   habitoFormPage: async ({ page }, use) => {
     await use(new HabitoFormPage(page));
+  },
+  profileModalPage: async ({ page }, use) => {
+    await use(new ProfileModalPage(page));
   },
 });
 

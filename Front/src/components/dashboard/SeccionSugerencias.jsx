@@ -130,6 +130,8 @@ function SeccionSugerencias({ habitosActuales, alSeleccionar }) {
       <div className="mb-4">
         <select
           className="form-select"
+          aria-label="Filtrar sugerencias por categoría"
+          data-testid="select-filtro-categoria-sugerencias"
           value={categoriaSeleccionada}
           onChange={(e) => setCategoriaSeleccionada(e.target.value)}
         >

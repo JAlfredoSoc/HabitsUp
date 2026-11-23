@@ -20,6 +20,15 @@ class DashboardPage {
     this.tarjetasHabito = page.getByTestId('tarjeta-habito');
     this.tarjetasSugerencia = page.getByTestId('tarjeta-sugerencia');
     this.encabezadoSugerencias = page.getByRole('heading', { name: 'Sugerencias para ti' });
+    this.selectFiltroCategoriaSugerencias = page.getByTestId('select-filtro-categoria-sugerencias');
+  }
+
+  async abrirModalPerfil() {
+    await this.nombreUsuarioHeader.click();
+  }
+
+  async filtrarSugerenciasPorCategoria(nombreCategoria) {
+    await this.selectFiltroCategoriaSugerencias.selectOption({ label: nombreCategoria });
   }
 
   async irAlPanel() {
@@ -39,7 +48,11 @@ class DashboardPage {
    * @param {string} nombreHabito
    */
   obtenerTarjetaHabito(nombreHabito) {
-    return this.tarjetasHabito.filter({ hasText: nombreHabito });
+    return this.tarjetasHabito
+      .filter({ hasText: nombreHabito })
+      .filter({
+        has: this.page.getByRole('heading', { name: nombreHabito, exact: true }),
+      });
   }
 
   obtenerTextoProgresoDeHabito(nombreHabito) {
