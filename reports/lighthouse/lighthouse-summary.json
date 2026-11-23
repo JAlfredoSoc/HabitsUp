@@ -1,0 +1,50 @@
+[
+  {
+    "id": "pagina-inicio",
+    "nombre": "1. Página Principal / Landing (/)",
+    "url": "http://localhost:5173/",
+    "performanceScore": 100,
+    "accessibilityScore": 97,
+    "bestPracticesScore": 100,
+    "seoScore": 92,
+    "LCP": "0.5 s",
+    "LCP_ms": 495,
+    "CLS": "0.002",
+    "TBT": "0 ms",
+    "TBT_ms": 0,
+    "FCP": "0.5 s",
+    "reportFile": "lighthouse-pagina-inicio.html"
+  },
+  {
+    "id": "panel-principal-habitos",
+    "nombre": "2. Panel Principal - Mis Hábitos (/panel-principal)",
+    "url": "http://localhost:5173/panel-principal",
+    "performanceScore": 100,
+    "accessibilityScore": 97,
+    "bestPracticesScore": 100,
+    "seoScore": 92,
+    "LCP": "0.4 s",
+    "LCP_ms": 388,
+    "CLS": "0.002",
+    "TBT": "0 ms",
+    "TBT_ms": 0,
+    "FCP": "0.4 s",
+    "reportFile": "lighthouse-panel-principal-habitos.html"
+  },
+  {
+    "id": "panel-sugerencias",
+    "nombre": "3. Catálogo y Gestión de Hábitos (/panel-principal?vista=sugerencias)",
+    "url": "http://localhost:5173/panel-principal?vista=sugerencias",
+    "performanceScore": 100,
+    "accessibilityScore": 97,
+    "bestPracticesScore": 100,
+    "seoScore": 92,
+    "LCP": "0.4 s",
+    "LCP_ms": 362,
+    "CLS": "0.002",
+    "TBT": "0 ms",
+    "TBT_ms": 0,
+    "FCP": "0.4 s",
+    "reportFile": "lighthouse-panel-sugerencias.html"
+  }
+]

@@ -115,6 +115,7 @@ function HabitoCard({ habito, alCompletar, alEditar, alEliminar, alVerDetalle, a
       <div className="progress progreso-personalizado mb-4">
         <div className={progressBarClass}
              role="progressbar"
+             aria-label={`Progreso de ${habito.nombre || 'hábito'}`}
              style={{ width: `${habito.progreso}%` }}
              aria-valuenow={habito.progreso}
              aria-valuemin="0"

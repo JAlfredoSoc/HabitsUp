@@ -48,7 +48,7 @@ function SeccionInformativa() {
                   style={{ height: '230px', objectFit: 'cover' }}
                 />
                 <div className="card-body">
-                  <h4 className="fw-bold">Mejora tu salud</h4>
+                  <h3 className="h4 fw-bold">Mejora tu salud</h3>
                   <p className="text-muted">
                     Mantener hábitos saludables como hacer ejercicio, dormir bien
                     y alimentarte correctamente fortalece tu cuerpo y mente.
@@ -66,7 +66,7 @@ function SeccionInformativa() {
                   style={{ height: '230px', objectFit: 'cover' }}
                 />
                 <div className="card-body">
-                  <h4 className="fw-bold">Aumenta tu productividad</h4>
+                  <h3 className="h4 fw-bold">Aumenta tu productividad</h3>
                   <p className="text-muted">
                     Una rutina organizada te ayuda a aprovechar mejor el tiempo,
                     cumplir metas y mantener un mejor enfoque en tus actividades.
@@ -84,7 +84,7 @@ function SeccionInformativa() {
                   style={{ height: '230px', objectFit: 'cover' }}
                 />
                 <div className="card-body">
-                  <h4 className="fw-bold">Fortalece tu bienestar</h4>
+                  <h3 className="h4 fw-bold">Fortalece tu bienestar</h3>
                   <p className="text-muted">
                     Los buenos hábitos contribuyen a reducir el estrés, aumentar
                     la motivación y mejorar tu calidad de vida en general.

@@ -1,0 +1,152 @@
+name: Habits UP - CI/CD Pipeline de Pruebas Automatizadas
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  NODE_ENV: test
+  MONGO_URI: ${{ secrets.MONGO_URI }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+jobs:
+  # =========================================================================
+  # ETAPA 1: Pruebas Unitarias, Mocking y Cobertura de Código (Mocha + c8)
+  # =========================================================================
+  unit-tests:
+    name: "1. Pruebas Unitarias y Cobertura (Mocha + Chai + c8)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: Back/package-lock.json
+
+      - name: Instalar dependencias del Backend
+        working-directory: ./Back
+        run: npm ci || npm install
+
+      - name: Ejecutar suite de Pruebas Unitarias con medición de cobertura (c8)
+        working-directory: ./Back
+        run: |
+          npm run test:coverage
+          mkdir -p ../reports/coverage
+          cp -r coverage/* ../reports/coverage/
+
+      - name: Publicar artefacto de Reporte HTML de Cobertura Unitaria
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-unit-coverage
+          path: |
+            Back/coverage/
+            reports/coverage/
+          retention-days: 14
+
+  # =========================================================================
+  # ETAPA 2: Pruebas de API REST, Contratos JSON Schema y DDT (Newman)
+  # Si unit-tests falla, esta etapa NO se ejecuta (needs: unit-tests)
+  # =========================================================================
+  api-tests:
+    name: "2. Pruebas de API REST y Contratos (Postman + Newman)"
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: Back/package-lock.json
+
+      - name: Instalar dependencias del Backend y Newman
+        working-directory: ./Back
+        run: npm ci || npm install
+
+      - name: Levantar API y ejecutar Colección Postman v2.1 con DDT y htmlextra
+        working-directory: ./Back
+        run: npm run test:api
+
+      - name: Publicar artefacto de Reporte HTML de Newman (htmlextra)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-newman-htmlextra
+          path: reports/newman/
+          retention-days: 14
+
+  # =========================================================================
+  # ETAPA 3: Pruebas E2E (Playwright POM), Accesibilidad (axe) y Lighthouse
+  # Si api-tests falla, esta etapa NO se ejecuta (needs: api-tests)
+  # =========================================================================
+  e2e-and-accessibility-tests:
+    name: "3. Pruebas E2E (Playwright), Accesibilidad (axe) y Lighthouse"
+    runs-on: ubuntu-latest
+    needs: api-tests
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias de Raíz, Backend y Frontend
+        run: |
+          npm install
+          npm --prefix Back install
+          npm --prefix Front install
+
+      - name: Instalar navegadores de Playwright (Chromium y Firefox)
+        run: npx playwright install --with-deps chromium firefox
+
+      - name: Ejecutar suite E2E (POM + Asistidas por IA) y Accesibilidad (@axe-core/playwright)
+        run: npx playwright test
+
+      - name: Ejecutar auditoría de Rendimiento y Accesibilidad con Google Lighthouse
+        run: npm run test:lighthouse
+
+      - name: Publicar artefacto de Reporte HTML de Playwright (con capturas y traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-playwright-e2e
+          path: |
+            reports/playwright/
+            test-results/
+          retention-days: 14
+
+      - name: Publicar artefacto de Reporte de Accesibilidad (@axe-core/playwright)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-accessibility-axe
+          path: reports/accessibility/
+          retention-days: 14
+
+      - name: Publicar artefacto de Reportes de Rendimiento y Accesibilidad (Lighthouse)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-lighthouse
+          path: reports/lighthouse/
+          retention-days: 14

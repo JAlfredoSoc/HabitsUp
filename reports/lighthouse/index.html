@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Resumen de Auditoría Lighthouse (Rendimiento y Accesibilidad) - Habits UP</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; background: #f8fafc; color: #0f172a; }
+    h1 { color: #5b21b6; }
+    table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #6d28d9; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Reporte Consolidado de Rendimiento y Accesibilidad (Google Lighthouse)</h1>
+  <p><strong>Proyecto:</strong> Habits UP | <strong>Meta sugerida:</strong> Puntaje de Rendimiento &ge; 70.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Página Clave Evaluada</th>
+        <th>Puntaje Rendimiento</th>
+        <th>Puntaje Accesibilidad</th>
+        <th>LCP (Largest Contentful Paint)</th>
+        <th>CLS (Cumulative Layout Shift)</th>
+        <th>TBT (Total Blocking Time)</th>
+        <th>Reporte Detallado</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td><strong>1. Página Principal / Landing (/)</strong></td>
+        <td style="font-weight:bold;color:#16a34a;">100 / 100</td>
+        <td style="font-weight:bold;color:#16a34a;">97 / 100</td>
+        <td>0.5 s</td>
+        <td>0.002</td>
+        <td>0 ms</td>
+        <td><a href="./lighthouse-pagina-inicio.html">Ver reporte HTML</a></td>
+      </tr>
+      <tr>
+        <td><strong>2. Panel Principal - Mis Hábitos (/panel-principal)</strong></td>
+        <td style="font-weight:bold;color:#16a34a;">100 / 100</td>
+        <td style="font-weight:bold;color:#16a34a;">97 / 100</td>
+        <td>0.4 s</td>
+        <td>0.002</td>
+        <td>0 ms</td>
+        <td><a href="./lighthouse-panel-principal-habitos.html">Ver reporte HTML</a></td>
+      </tr>
+      <tr>
+        <td><strong>3. Catálogo y Gestión de Hábitos (/panel-principal?vista=sugerencias)</strong></td>
+        <td style="font-weight:bold;color:#16a34a;">100 / 100</td>
+        <td style="font-weight:bold;color:#16a34a;">97 / 100</td>
+        <td>0.4 s</td>
+        <td>0.002</td>
+        <td>0 ms</td>
+        <td><a href="./lighthouse-panel-sugerencias.html">Ver reporte HTML</a></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

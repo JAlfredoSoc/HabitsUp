@@ -159,6 +159,7 @@ function TarjetaHabito({
           <div
             className="progress-bar"
             role="progressbar"
+            aria-label={`Progreso de ${habito.nombre || 'hábito'}`}
             style={{ width: `${habito.progreso}%` }}
             aria-valuenow={habito.progreso}
             aria-valuemin="0"

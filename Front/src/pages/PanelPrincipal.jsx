@@ -16,7 +16,10 @@ import {
 
 function PanelPrincipal() {
   const [habitos, setHabitos] = useState([]);
-  const [seccionActiva, setSeccionActiva] = useState("habitos");
+  const [seccionActiva, setSeccionActiva] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("vista") || "habitos";
+  });
   const [mostrarModal, setMostrarModal] = useState(false);
   const [habitoEnEdicion, setHabitoEnEdicion] = useState(null);
   const [sugerenciaSeleccionada, setSugerenciaSeleccionada] = useState(null);

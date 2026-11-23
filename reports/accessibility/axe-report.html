@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reporte de Accesibilidad Web (@axe-core/playwright) - Habits UP</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; background: #f8fafc; color: #0f172a; }
+    h1 { color: #5b21b6; }
+    table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #6d28d9; color: #fff; }
+    .badge-ok { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Reporte Automatizado de Accesibilidad (@axe-core/playwright)</h1>
+  <p><strong>Proyecto:</strong> Habits UP | <strong>Criterio de Aprobación:</strong> 0 violaciones de impacto <code>critical</code> o <code>serious</code> (WCAG 2.1 A/AA).</p>
+  <p><span class="badge-ok">Estado Global: APROBADO</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Vista Evaluada</th>
+        <th>Ruta</th>
+        <th>Reglas Aprobadas (Passes)</th>
+        <th>Violaciones Critical / Serious</th>
+        <th>Violaciones Totales</th>
+        <th>Detalle de Reglas</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td><strong>1. Página de Inicio (Landing)</strong></td>
+        <td><code>/</code></td>
+        <td style="color:#16a34a;font-weight:bold;">24</td>
+        <td style="color:#16a34a;font-weight:bold;">
+          0
+        </td>
+        <td>2</td>
+        <td><code>landmark-one-main (moderate)</code>, <code>region (moderate)</code></td>
+      </tr>
+      <tr>
+        <td><strong>2. Modal de Inicio de Sesión</strong></td>
+        <td><code>/ (Modal Login)</code></td>
+        <td style="color:#16a34a;font-weight:bold;">38</td>
+        <td style="color:#16a34a;font-weight:bold;">
+          0
+        </td>
+        <td>1</td>
+        <td><code>region (moderate)</code></td>
+      </tr>
+      <tr>
+        <td><strong>3. Panel Principal - Mis Hábitos</strong></td>
+        <td><code>/panel-principal</code></td>
+        <td style="color:#16a34a;font-weight:bold;">25</td>
+        <td style="color:#16a34a;font-weight:bold;">
+          0
+        </td>
+        <td>2</td>
+        <td><code>page-has-heading-one (moderate)</code>, <code>region (moderate)</code></td>
+      </tr>
+      <tr>
+        <td><strong>4. Panel Principal - Catálogo de Sugerencias</strong></td>
+        <td><code>/panel-principal (Sugerencias)</code></td>
+        <td style="color:#16a34a;font-weight:bold;">26</td>
+        <td style="color:#16a34a;font-weight:bold;">
+          0
+        </td>
+        <td>3</td>
+        <td><code>heading-order (moderate)</code>, <code>page-has-heading-one (moderate)</code>, <code>region (moderate)</code></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
