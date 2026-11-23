@@ -64,11 +64,11 @@ function ModalHabito({
         nombre: sugerenciaSeleccionada.nombre || "",
         descripcion: sugerenciaSeleccionada.descripcion || "",
         categoria: sugerenciaSeleccionada.categoria?._id || "",
-        horario: sugerenciaSeleccionada.horario || "",
+        horario: sugerenciaSeleccionada.horario || "08:00",
         fechaInicio: sugerenciaSeleccionada.fechaInicio || "",
         fechaFin: sugerenciaSeleccionada.fechaFin || "",
-        periodo: sugerenciaSeleccionada.periodo || "",
-        frecuencia: sugerenciaSeleccionada.frecuencia || "",
+        periodo: sugerenciaSeleccionada.periodo || "diario",
+        frecuencia: sugerenciaSeleccionada.frecuencia || "1",
         notificacionActiva: false,
         tipoNotificacion: "recordatorio",
       });
@@ -192,7 +192,7 @@ function ModalHabito({
       setTimeout(() => {
         cerrar();
         setProcesando(false);
-      }, 1500);
+      }, 300);
     } else {
       setMensajeError(resultado?.message || "Error al crear el hábito");
       setProcesando(false);
@@ -205,6 +205,10 @@ function ModalHabito({
     <div
       className="modal d-block"
       tabIndex="-1"
+      role="dialog"
+      aria-modal="true"
+      aria-label={habitoEnEdicion ? "Editar hábito" : "Nuevo hábito"}
+      data-testid="modal-habito"
       style={{ backgroundColor: "rgba(15, 23, 42, 0.45)" }}
     >
       <div className="modal-dialog modal-dialog-centered modal-lg">
@@ -254,8 +258,9 @@ function ModalHabito({
               <div className="row g-3">
                 {/* Nombre */}
                 <div className="col-12">
-                  <label className="form-label fw-semibold">Nombre del hábito *</label>
+                  <label htmlFor="habito-nombre" className="form-label fw-semibold">Nombre del hábito *</label>
                   <input
+                    id="habito-nombre"
                     type="text"
                     className={`form-control form-control-lg rounded-4 ${errores.nombre ? "is-invalid" : ""}`}
                     name="nombre"
@@ -264,13 +269,14 @@ function ModalHabito({
                     placeholder="Ejemplo: Tomar agua"
                     disabled={procesando}
                   />
-                  {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
+                  {errores.nombre && <div className="invalid-feedback" data-testid="error-habito-nombre">{errores.nombre}</div>}
                 </div>
 
                 {/* Descripción */}
                 <div className="col-12">
-                  <label className="form-label fw-semibold">Descripción *</label>
+                  <label htmlFor="habito-descripcion" className="form-label fw-semibold">Descripción *</label>
                   <textarea
+                    id="habito-descripcion"
                     className={`form-control rounded-4 ${errores.descripcion ? "is-invalid" : ""}`}
                     name="descripcion"
                     value={formulario.descripcion}
@@ -279,13 +285,14 @@ function ModalHabito({
                     placeholder="Describe el objetivo o detalle del hábito"
                     disabled={procesando}
                   />
-                  {errores.descripcion && <div className="invalid-feedback">{errores.descripcion}</div>}
+                  {errores.descripcion && <div className="invalid-feedback" data-testid="error-habito-descripcion">{errores.descripcion}</div>}
                 </div>
 
                 {/* Categoría */}
                 <div className="col-12">
-                  <label className="form-label fw-semibold">Categoría *</label>
+                  <label htmlFor="habito-categoria" className="form-label fw-semibold">Categoría *</label>
                   <select
+                    id="habito-categoria"
                     className={`form-select form-select-lg rounded-4 ${errores.categoria ? "is-invalid" : ""}`}
                     name="categoria"
                     value={formulario.categoria}
@@ -299,14 +306,15 @@ function ModalHabito({
                       </option>
                     ))}
                   </select>
-                  {errores.categoria && <div className="invalid-feedback">{errores.categoria}</div>}
+                  {errores.categoria && <div className="invalid-feedback" data-testid="error-habito-categoria">{errores.categoria}</div>}
                 </div>
 
                 {/* Periodo y Frecuencia */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Periodo *</label>
+                  <label htmlFor="habito-periodo" className="form-label fw-semibold">Periodo *</label>
                   <select
-                    className="form-select form-select-lg rounded-4"
+                    id="habito-periodo"
+                    className={`form-select form-select-lg rounded-4 ${errores.periodo ? "is-invalid" : ""}`}
                     name="periodo"
                     value={formulario.periodo}
                     onChange={manejarCambio}
@@ -317,12 +325,13 @@ function ModalHabito({
                     <option value="semanal">Semanal</option>
                     <option value="mensual">Mensual</option>
                   </select>
-                  {errores.periodo && <div className="invalid-feedback">{errores.periodo}</div>}
+                  {errores.periodo && <div className="invalid-feedback" data-testid="error-habito-periodo">{errores.periodo}</div>}
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Frecuencia *</label>
+                  <label htmlFor="habito-frecuencia" className="form-label fw-semibold">Frecuencia *</label>
                   <input
+                    id="habito-frecuencia"
                     type="number"
                     className={`form-control form-control-lg rounded-4 ${errores.frecuencia ? "is-invalid" : ""}`}
                     name="frecuencia"
@@ -331,13 +340,14 @@ function ModalHabito({
                     placeholder="Ej: 1, 2, 3..."
                     disabled={procesando}
                   />
-                  {errores.frecuencia && <div className="invalid-feedback">{errores.frecuencia}</div>}
+                  {errores.frecuencia && <div className="invalid-feedback" data-testid="error-habito-frecuencia">{errores.frecuencia}</div>}
                 </div>
 
                 {/* Horario y Fechas */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Horario *</label>
+                  <label htmlFor="habito-horario" className="form-label fw-semibold">Horario *</label>
                   <input
+                    id="habito-horario"
                     type="time"
                     className={`form-control form-control-lg rounded-4 ${errores.horario ? "is-invalid" : ""}`}
                     name="horario"
@@ -345,12 +355,13 @@ function ModalHabito({
                     onChange={manejarCambio}
                     disabled={procesando}
                   />
-                  {errores.horario && <div className="invalid-feedback">{errores.horario}</div>}
+                  {errores.horario && <div className="invalid-feedback" data-testid="error-habito-horario">{errores.horario}</div>}
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Fecha inicio</label>
+                  <label htmlFor="habito-fecha-inicio" className="form-label fw-semibold">Fecha inicio</label>
                   <input
+                    id="habito-fecha-inicio"
                     type="date"
                     className="form-control form-control-lg rounded-4"
                     name="fechaInicio"
@@ -361,8 +372,9 @@ function ModalHabito({
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Fecha fin</label>
+                  <label htmlFor="habito-fecha-fin" className="form-label fw-semibold">Fecha fin</label>
                   <input
+                    id="habito-fecha-fin"
                     type="date"
                     className={`form-control form-control-lg rounded-4 ${errores.fechaFin ? "is-invalid" : ""}`}
                     name="fechaFin"
@@ -370,7 +382,7 @@ function ModalHabito({
                     onChange={manejarCambio}
                     disabled={procesando}
                   />
-                  {errores.fechaFin && <div className="invalid-feedback">{errores.fechaFin}</div>}
+                  {errores.fechaFin && <div className="invalid-feedback" data-testid="error-habito-fecha-fin">{errores.fechaFin}</div>}
                 </div>
               </div>
 

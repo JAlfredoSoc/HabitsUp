@@ -1,0 +1,73 @@
+$kind: http-request
+name: "CP-19: POST /RegistroUsuario - Registrar nueva cuenta de usuario"
+url: "{{baseUrl}}/RegistroUsuario"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nombre": "Jose Alfredo Prueba",
+      "correo": "{{correoPrueba}}",
+      "contrasena": "{{passwordPrueba}}",
+      "edad": "24",
+      "telefono": "3001234567"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = 'test_user_' + Date.now() + '_' + pm.info.iteration + '@example.test';
+      pm.collectionVariables.set('correoPrueba', uniqueEmail);
+      pm.environment.set('correoPrueba', uniqueEmail);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('CP-19 [Código de estado] Responde 201 Created al registrar un usuario nuevo', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('CP-19 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-19 [Body] Crea el usuario sin exponer la contraseña y encadena usuarioId', function () {
+          const body = pm.response.json();
+          const correoEsperado = pm.collectionVariables.get('correoPrueba');
+          pm.expect(body).to.have.property('message', 'Usuario registrado exitosamente');
+          pm.expect(body).to.have.property('usuario');
+          pm.expect(body.usuario).to.have.property('_id');
+          pm.expect(body.usuario).to.have.property('correo', correoEsperado);
+          pm.expect(body.usuario).to.not.have.property('contrasena');
+          pm.collectionVariables.set('usuarioId', body.usuario._id);
+          pm.environment.set('usuarioId', body.usuario._id);
+      });
+
+      pm.test('CP-19 [Contrato JSON Schema #2] Valida contrato de creación de usuario', function () {
+          const schemaRegistro = {
+              type: 'object',
+              required: ['message', 'usuario'],
+              properties: {
+                  message: { type: 'string' },
+                  usuario: {
+                      type: 'object',
+                      required: ['_id', 'nombre', 'correo', 'edad', 'telefono', 'habitos'],
+                      properties: {
+                          _id: { type: 'string' },
+                          nombre: { type: 'string' },
+                          correo: { type: 'string' },
+                          edad: { type: 'string' },
+                          telefono: { type: 'string' },
+                          habitos: { type: 'array' }
+                      }
+                  }
+              }
+          };
+          pm.response.to.have.jsonSchema(schemaRegistro);
+      });
+
+      pm.test('CP-19 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+    language: text/javascript
+order: 1000

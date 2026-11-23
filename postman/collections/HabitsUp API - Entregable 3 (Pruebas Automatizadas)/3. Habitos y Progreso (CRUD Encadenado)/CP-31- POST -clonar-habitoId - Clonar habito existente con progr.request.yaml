@@ -1,0 +1,37 @@
+$kind: http-request
+name: "CP-31: POST /clonar/:habitoId - Clonar habito existente con progreso en 0"
+url: "{{baseUrl}}/clonar/{{habitoId}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "usuarioId": "{{usuarioId}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('CP-31 [Código de estado] Responde 201 Created al clonar un hábito existente', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('CP-31 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-31 [Body] Crea copia con sufijo (copia) y guarda habitoClonadoId', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('success', true);
+          pm.expect(body.data).to.have.property('_id');
+          pm.expect(body.data.nombre).to.include('(copia)');
+          pm.collectionVariables.set('habitoClonadoId', body.data._id);
+          pm.environment.set('habitoClonadoId', body.data._id);
+      });
+
+      pm.test('CP-31 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+    language: text/javascript
+order: 5000

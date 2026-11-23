@@ -1,0 +1,3 @@
+$kind: collection
+description: Pruebas de humo y consulta de catálogos base (Estado del servidor, Categorías y Sugerencias).
+order: 1000

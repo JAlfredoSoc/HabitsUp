@@ -84,7 +84,7 @@ function BarraSuperiorPanel() {
             style={{ cursor: 'pointer' }}
             onClick={abrirModalPerfil}
           >
-            <p className="mb-0 fw-semibold">
+            <p className="mb-0 fw-semibold" data-testid="usuario-nombre-header">
               {usuario ? usuario.nombre : 'Usuario'}
             </p>
             <small className="text-muted">Nivel constante</small>
@@ -103,6 +103,8 @@ function BarraSuperiorPanel() {
             className="btn btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
             style={{ width: '46px', height: '46px' }}
             title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            data-testid="btn-cerrar-sesion"
             onClick={handleCerrarSesion}
           >
             <FiLogOut />

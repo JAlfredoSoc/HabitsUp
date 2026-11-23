@@ -134,6 +134,10 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
       <div
         className="bg-white rounded-4 shadow p-4 position-relative"
         style={{ width: '100%', maxWidth: '460px', maxHeight: '90vh', overflowY: 'auto' }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Registrarse"
+        data-testid="modal-registro"
       >
         <button
           type="button"
@@ -150,7 +154,11 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
 
         {/* Mensaje de éxito */}
         {exito && (
-          <div className="alert alert-success alert-dismissible fade show" role="alert">
+          <div
+            className="alert alert-success alert-dismissible fade show"
+            role="alert"
+            data-testid="registro-alert-exito"
+          >
             <i className="bi bi-check-circle-fill me-2"></i>
             {exito}
             <button
@@ -164,7 +172,11 @@ function ModalRegistroUsuario({ mostrar, cerrarModal, abrirModalInicioSesion }) 
 
         {/* Mensaje de error */}
         {error && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <div
+            className="alert alert-danger alert-dismissible fade show"
+            role="alert"
+            data-testid="registro-alert-error"
+          >
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
             {error}
             <button

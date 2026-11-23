@@ -1,0 +1,62 @@
+[
+  {
+    "casoId": "DDT-01",
+    "nombreHabito": "Hidratación matutina constante",
+    "descripcionHabito": "Beber un vaso de agua al despertar todos los días",
+    "periodo": "diario",
+    "frecuencia": 1,
+    "frecuenciaSemanal": 0,
+    "expectedStatus": 201,
+    "expectedPeriodo": "diario",
+    "expectedFrecuencia": 1,
+    "expectedMessage": "Hábito creado exitosamente"
+  },
+  {
+    "casoId": "DDT-02",
+    "nombreHabito": "Lectura técnica vespertina",
+    "descripcionHabito": "Leer capítulos de ingeniería de software tres veces al día",
+    "periodo": "diario",
+    "frecuencia": 3,
+    "frecuenciaSemanal": 0,
+    "expectedStatus": 201,
+    "expectedPeriodo": "diario",
+    "expectedFrecuencia": 3,
+    "expectedMessage": "Hábito creado exitosamente"
+  },
+  {
+    "casoId": "DDT-03",
+    "nombreHabito": "Entrenamiento cardiovascular semanal",
+    "descripcionHabito": "Realizar 45 minutos de trote o ciclismo cinco veces por semana",
+    "periodo": "semanal",
+    "frecuencia": 5,
+    "frecuenciaSemanal": 5,
+    "expectedStatus": 201,
+    "expectedPeriodo": "semanal",
+    "expectedFrecuencia": 5,
+    "expectedMessage": "Hábito creado exitosamente"
+  },
+  {
+    "casoId": "DDT-04",
+    "nombreHabito": "Práctica de meditación de fin de semana",
+    "descripcionHabito": "Sesión de respiración consciente dos días por semana",
+    "periodo": "semanal",
+    "frecuencia": 2,
+    "frecuenciaSemanal": 2,
+    "expectedStatus": 201,
+    "expectedPeriodo": "semanal",
+    "expectedFrecuencia": 2,
+    "expectedMessage": "Hábito creado exitosamente"
+  },
+  {
+    "casoId": "DDT-05",
+    "nombreHabito": "Revisión mensual de finanzas y metas",
+    "descripcionHabito": "Evaluar cumplimiento de presupuesto y objetivos doce veces al mes",
+    "periodo": "mensual",
+    "frecuencia": 12,
+    "frecuenciaSemanal": 0,
+    "expectedStatus": 201,
+    "expectedPeriodo": "mensual",
+    "expectedFrecuencia": 12,
+    "expectedMessage": "Hábito creado exitosamente"
+  }
+]

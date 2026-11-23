@@ -1,0 +1,54 @@
+$kind: http-request
+name: "CP-17: GET /ObtenerCategoria - Consultar catalogo de categorias"
+url: "{{baseUrl}}/ObtenerCategoria"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('CP-17 [Código de estado] Responde 200 OK al listar categorías', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('CP-17 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-17 [Body] Retorna arreglo de categorías con _id y nombreCategoria y guarda categoriaId', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('success', true);
+          pm.expect(body.data).to.be.an('array').that.is.not.empty;
+          pm.expect(body.data[0]).to.have.property('_id');
+          pm.expect(body.data[0]).to.have.property('nombreCategoria');
+          pm.collectionVariables.set('categoriaId', body.data[0]._id);
+          pm.environment.set('categoriaId', body.data[0]._id);
+      });
+
+      pm.test('CP-17 [Contrato JSON Schema #1] Valida esquema de respuesta del catálogo de categorías', function () {
+          const schemaCategorias = {
+              type: 'object',
+              required: ['success', 'data'],
+              properties: {
+                  success: { type: 'boolean' },
+                  data: {
+                      type: 'array',
+                      minItems: 1,
+                      items: {
+                          type: 'object',
+                          required: ['_id', 'nombreCategoria'],
+                          properties: {
+                              _id: { type: 'string' },
+                              nombreCategoria: { type: 'string' },
+                              nombre: { type: 'string' }
+                          }
+                      }
+                  }
+              }
+          };
+          pm.response.to.have.jsonSchema(schemaCategorias);
+      });
+
+      pm.test('CP-17 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+    language: text/javascript
+order: 2000

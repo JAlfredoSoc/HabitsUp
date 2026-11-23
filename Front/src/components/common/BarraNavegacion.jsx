@@ -35,6 +35,7 @@ function BarraNavegacion({ abrirModalInicio, abrirModalRegistro }) {
           <div className="d-flex align-items-center gap-3">
             <button
               className="btn btn-link text-white text-decoration-none"
+              data-testid="nav-btn-login"
               onClick={abrirModalInicio}
             >
               Iniciar sesión
@@ -42,6 +43,7 @@ function BarraNavegacion({ abrirModalInicio, abrirModalRegistro }) {
 
             <button
               className="btn btn-primary rounded-3 px-4"
+              data-testid="nav-btn-registro"
               onClick={abrirModalRegistro}
             >
               Registrarse

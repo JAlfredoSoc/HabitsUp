@@ -110,7 +110,7 @@ function HabitoCard({ habito, alCompletar, alEditar, alEliminar, alVerDetalle, a
 
       <div className="d-flex justify-content-between mb-2">
         <small className="text-muted">Progreso</small>
-        <small className="fw-semibold">{habito.progreso}%</small>
+        <small className="fw-semibold" data-testid="habito-progreso-texto">{habito.progreso}%</small>
       </div>
       <div className="progress progreso-personalizado mb-4">
         <div className={progressBarClass}

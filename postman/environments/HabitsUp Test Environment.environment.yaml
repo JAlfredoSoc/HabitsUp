@@ -1,0 +1,22 @@
+name: HabitsUp Test Environment
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: authToken
+    value: ''
+  - key: usuarioId
+    value: ''
+  - key: otroUsuarioId
+    value: 507f1f77bcf86cd799439011
+  - key: habitoId
+    value: ''
+  - key: habitoClonadoId
+    value: ''
+  - key: habitoInexistenteId
+    value: 507f1f77bcf86cd799439099
+  - key: categoriaId
+    value: ''
+  - key: correoPrueba
+    value: ''
+  - key: passwordPrueba
+    value: Prueba123!

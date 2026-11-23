@@ -71,6 +71,10 @@ function ModalInicioSesion({ mostrar, cerrarModal, abrirModalRegistro }) {
       <div
         className="bg-white rounded-4 shadow p-4 position-relative"
         style={{ width: '100%', maxWidth: '420px' }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Iniciar sesión"
+        data-testid="modal-login"
       >
         <button
           type="button"
@@ -86,7 +90,11 @@ function ModalInicioSesion({ mostrar, cerrarModal, abrirModalRegistro }) {
 
         {/* Mostrar mensaje de error si existe */}
         {error && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <div
+            className="alert alert-danger alert-dismissible fade show"
+            role="alert"
+            data-testid="login-alert-error"
+          >
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
             {error}
             <button

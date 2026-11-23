@@ -1,0 +1,37 @@
+$kind: http-request
+name: "CP-27: PUT /EditarUsuario/:id - Actualizar datos del perfil propio"
+url: "{{baseUrl}}/EditarUsuario/{{usuarioId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nombre": "Jose Alfredo Actualizado",
+      "telefono": "3007654321"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('CP-27 [Código de estado] Responde 200 OK al actualizar el perfil de usuario', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('CP-27 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-27 [Body] Persiste el nuevo nombre y teléfono conservando el correo intacto', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('_id', pm.collectionVariables.get('usuarioId'));
+          pm.expect(body).to.have.property('nombre', 'Jose Alfredo Actualizado');
+          pm.expect(body).to.have.property('telefono', '3007654321');
+          pm.expect(body).to.have.property('correo', pm.collectionVariables.get('correoPrueba'));
+      });
+
+      pm.test('CP-27 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+    language: text/javascript
+order: 4000

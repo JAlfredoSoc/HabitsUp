@@ -1,0 +1,3 @@
+$kind: collection
+description: "CRUD completo y encadenado del recurso Hábito: Creación (POST), Lectura individual (GET), Listado por usuario (GET), Incremento de progreso (PUT), Clonación con Prototype (POST), Edición (PUT), Historial (GET) y Eliminación (DELETE)."
+order: 3000

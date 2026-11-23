@@ -1,0 +1,3 @@
+$kind: collection
+description: "Gestión completa del recurso Usuario: Registro (POST), Inicio de sesión con generación de token JWT (POST), Consulta de perfil autenticado (GET), Actualización de perfil (PUT) y consultas de estadísticas."
+order: 2000

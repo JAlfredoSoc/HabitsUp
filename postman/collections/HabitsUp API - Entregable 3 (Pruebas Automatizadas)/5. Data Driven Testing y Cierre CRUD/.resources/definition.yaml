@@ -1,0 +1,3 @@
+$kind: collection
+description: Ejecución parametrizada (Data Driven Testing) leyendo datos y resultados esperados con pm.iterationData.get(), seguida de la eliminación en cascada del usuario (DELETE /usuario/:id).
+order: 5000

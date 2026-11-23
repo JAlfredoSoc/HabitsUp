@@ -1,0 +1,31 @@
+$kind: collection
+description: Colección Postman v2.1 para HabitsUp (RAA3). Incluye autenticación automatizada con Pre-request a nivel de colección, CRUD completo encadenado de Usuarios y Hábitos, validación de contratos con JSON Schema, escenarios negativos de la familia 4xx (400, 401, 403, 404, 409) y Data Driven Testing (DDT) con pm.iterationData.get().
+variables:
+  baseUrl: http://localhost:3000
+  authToken: ""
+  usuarioId: ""
+  otroUsuarioId: 507f1f77bcf86cd799439011
+  habitoId: ""
+  habitoClonadoId: ""
+  habitoInexistenteId: 507f1f77bcf86cd799439099
+  categoriaId: ""
+  correoPrueba: ""
+  passwordPrueba: Prueba123!
+  ddtNombre: Hábito DDT Lectura Diaria
+  ddtDescripcion: Leer documentación técnica todos los días
+  ddtPeriodo: diario
+  ddtFrecuencia: "2"
+  ddtFrecuenciaSemanal: "0"
+scripts:
+  - type: http:beforeRequest
+    code: |-
+      // Pre-request Script a nivel de colección: envía automáticamente el token JWT en cada petición
+      const skipAuth = pm.variables.get('skipAuthHeader');
+      const token = pm.collectionVariables.get('authToken') || pm.environment.get('authToken');
+      if (token && skipAuth !== 'true') {
+          pm.request.headers.upsert({
+              key: 'Authorization',
+              value: 'Bearer ' + token
+          });
+      }
+    language: text/javascript

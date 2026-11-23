@@ -1,0 +1,37 @@
+$kind: http-request
+name: "CP-32: PUT /editar/:habitoId - Editar nombre y descripcion de habito propio"
+url: "{{baseUrl}}/editar/{{habitoId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nombre": "Leer 30 minutos al día (Editado)",
+      "descripcion": "Lectura profunda actualizada a 30 minutos diarios",
+      "usuarioId": "{{usuarioId}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('CP-32 [Código de estado] Responde 200 OK al editar el hábito', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('CP-32 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-32 [Body] Actualiza el nombre y descripción conservando el progreso acumulado', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('message', 'Hábito actualizado correctamente');
+          pm.expect(body.data).to.have.property('nombre', 'Leer 30 minutos al día (Editado)');
+          pm.expect(body.data.progreso).to.have.property('progreso', 1);
+      });
+
+      pm.test('CP-32 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+    language: text/javascript
+order: 6000

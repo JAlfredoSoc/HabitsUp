@@ -30,6 +30,7 @@ function BarraLateralPanel({ seccionActiva, cambiarSeccion }) {
           <button
             key={item.nombre}
             className={`menu-lateral-btn ${seccionActiva === item.clave ? 'activo' : ''}`}
+            data-testid={`nav-menu-${item.clave}`}
             onClick={() => cambiarSeccion(item.clave)}
           >
             <span className="menu-icono">{item.icono}</span>

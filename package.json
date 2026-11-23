@@ -1,0 +1,17 @@
+{
+  "name": "habitsup-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Suite integral de pruebas automatizadas para Habits UP (Unitarias, API Newman y E2E Playwright)",
+  "scripts": {
+    "test:unit": "npm --prefix Back run test:unit",
+    "test:coverage": "npm --prefix Back run test:coverage",
+    "test:api": "npm --prefix Back run test:api",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report reports/playwright",
+    "test:all": "npm run test:unit && npm run test:api && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

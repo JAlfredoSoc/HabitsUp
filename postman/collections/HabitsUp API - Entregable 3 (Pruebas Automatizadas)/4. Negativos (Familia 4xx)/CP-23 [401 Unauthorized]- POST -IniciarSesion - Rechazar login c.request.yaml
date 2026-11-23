@@ -1,0 +1,35 @@
+$kind: http-request
+name: "CP-23 [401 Unauthorized]: POST /IniciarSesion - Rechazar login con contrasena incorrecta"
+url: "{{baseUrl}}/IniciarSesion"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "correo": "{{correoPrueba}}",
+      "contrasena": "ClaveTotalmenteErronea999!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('CP-23 [Código de estado] Responde 401 Unauthorized ante contraseña errónea', function () {
+          pm.response.to.have.status(401);
+      });
+
+      pm.test('CP-23 [Content-Type] El encabezado Content-Type es application/json', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('CP-23 [Body] Retorna mensaje de contraseña incorrecta y no emite token', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('message', 'Contraseña incorrecta');
+          pm.expect(body).to.not.have.property('token');
+      });
+
+      pm.test('CP-23 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+    language: text/javascript
+order: 3000

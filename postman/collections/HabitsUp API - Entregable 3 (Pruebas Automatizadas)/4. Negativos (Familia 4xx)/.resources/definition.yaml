@@ -1,0 +1,3 @@
+$kind: collection
+description: "Pruebas negativas con al menos 5 códigos distintos de la familia 4xx: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found y 409 Conflict (duplicado y regla de negocio)."
+order: 4000

@@ -1,0 +1,21 @@
+type: dataset
+name: HabitsUp API - Entregable 3 (Pruebas Automatizadas) – ddt_habitos
+id: fae34188-c083-4bc6-b8ac-e27333c36260
+data_dir: .resources
+sources:
+  - from: embedded_datasource
+    datasource:
+      name: source_habitsup_api_entregable_3_pruebas_automatizadas_ddt_habitos
+      id: 4ab16fc4-2934-401f-9285-38d771034125
+      dsKey: source_habitsup_api_entregable_3_pruebas_automatizadas_ddt_habitos
+      format: json
+      source_type: static
+      location:
+        type: local_filesystem
+        value: .resources/habitsup-api-entregable-3-pruebas-automatizadas-ddt-habitos.json
+views:
+  - from: embedded_view
+    view:
+      name: ddt_habitos
+      id: 233c27d8-e52a-4888-8568-a29bc2051889
+      query: SELECT * FROM source_habitsup_api_entregable_3_pruebas_automatizadas_ddt_habitos

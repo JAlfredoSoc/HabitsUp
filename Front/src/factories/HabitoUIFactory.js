@@ -20,7 +20,11 @@ export default class HabitoUIFactory {
   renderContainer(content) {
     return React.createElement(
       "div",
-      { className: this.getCardClass(), style: this.getCardStyle() },
+      {
+        className: this.getCardClass(),
+        style: this.getCardStyle(),
+        "data-testid": "tarjeta-habito",
+      },
       content
     );
   }

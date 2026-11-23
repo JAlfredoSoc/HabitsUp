@@ -45,7 +45,10 @@ function TarjetaSugerencia({ sugerencia, alSeleccionar }) {
   const claseCategoria = obtenerClaseCategoria(sugerencia.categoria);
 
   return (
-    <div className={`card tarjeta-habito tarjeta-habito-color ${claseCategoria} h-100`}>
+    <div
+      className={`card tarjeta-habito tarjeta-habito-color ${claseCategoria} h-100`}
+      data-testid="tarjeta-sugerencia"
+    >
       <div className="card-body p-4 d-flex flex-column">
         <div className="d-flex justify-content-between align-items-start mb-3">
           <span className={`etiqueta-categoria ${claseCategoria}`}>
