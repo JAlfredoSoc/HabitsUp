@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Habito = require("../models/habito.model");
 const Categoria = require("../models/categoriaHabito");
 const Progreso = require("../models/progresoHabito.model");
@@ -19,6 +20,22 @@ const CategoriaFactory = require("../services/flyweight/CategoriaFactory");
 
 // Crear Habito
 class HabitoContorller {
+  async resolverCategoriaId(categoriaInput) {
+    if (!categoriaInput) return undefined;
+    const categoriaFlyweight = CategoriaFactory.getCategoria(String(categoriaInput));
+    const valor = categoriaFlyweight.getNombre();
+    if (mongoose.Types.ObjectId.isValid(valor)) {
+      return valor;
+    }
+    const encontrada = await Categoria.findOne({
+      nombreCategoria: { $regex: new RegExp(`^${valor}$`, "i") },
+    });
+    if (encontrada) {
+      return encontrada._id;
+    }
+    return undefined;
+  }
+
   async crearHabito(req, res) {
     try {
       const {
@@ -39,10 +56,25 @@ class HabitoContorller {
         subHabitos,
       } = req.body;
 
-      const categoriaFlyweight = CategoriaFactory.getCategoria(categoria);
+      if (!nombre || typeof nombre !== "string" || !nombre.trim()) {
+        return res.status(400).json({ message: "El nombre del hábito es obligatorio" });
+      }
+      if (!descripcion || typeof descripcion !== "string" || !descripcion.trim()) {
+        return res.status(400).json({ message: "La descripción del hábito es obligatoria" });
+      }
+      if (!periodo || !["diario", "semanal", "mensual"].includes(periodo)) {
+        return res.status(400).json({ message: "El periodo es obligatorio y debe ser diario, semanal o mensual" });
+      }
+      if (frecuencia === undefined || frecuencia === null || isNaN(Number(frecuencia)) || Number(frecuencia) <= 0) {
+        return res.status(400).json({ message: "La frecuencia debe ser un número mayor a 0" });
+      }
+      if (!usuarioId || !mongoose.Types.ObjectId.isValid(usuarioId)) {
+        return res.status(400).json({ message: "El usuarioId es obligatorio y debe ser un ObjectId válido" });
+      }
 
-      // 👇 este es el valor optimizado que debes usar
-      const categoriaFinal = categoriaFlyweight.getNombre();
+      const categoriaFinal = await this.resolverCategoriaId(categoria);
+      const horarioFinal = horario || new Date().toISOString();
+      const fechaInicioFinal = fechaInicio || new Date().toISOString();
 
       // APLICANDO PTRON BUILDER
       // 1️⃣ Crear hábito
@@ -50,14 +82,18 @@ class HabitoContorller {
       const director = new HabitoDirector();
 
       const habitoData = director.construirHabitoCompleto(builder, {
-        nombre,
-        descripcion,
-        estado,
-        horario,
-        fechaInicio,
-        fechaFin,
+        nombre: nombre.trim(),
+        descripcion: descripcion.trim(),
+        estado: estado || "pendiente",
+        horario: horarioFinal,
+        fechaInicio: fechaInicioFinal,
+        fechaFin: fechaFin || null,
         categoria: categoriaFinal,
-        diasSeleccionados,
+        diasSeleccionados: diasSeleccionados || [],
+        frecuenciaSemanal:
+          periodo === "semanal"
+            ? Number(frecuenciaSemanal || frecuencia)
+            : Number(frecuenciaSemanal || 0),
       });
 
       const nuevoHabito = new Habito(habitoData);
@@ -158,11 +194,49 @@ class HabitoContorller {
 
       // 5️⃣ Respuesta
       res.status(201).json({
+        message: "Hábito creado exitosamente",
         habito: habitoGuardado,
         progreso: progresoGuardado,
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+  }
+
+  async obtenerHabitoPorId(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "ID de hábito inválido",
+        });
+      }
+
+      const habito = await Habito.findById(id)
+        .populate("categoria")
+        .populate("progreso")
+        .populate("notificaciones");
+
+      if (!habito) {
+        return res.status(404).json({
+          success: false,
+          message: "Hábito no encontrado",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Hábito obtenido exitosamente",
+        data: habito,
+        habito,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -252,18 +326,27 @@ class HabitoContorller {
   async clonarHabito(req, res) {
     try {
       const { habitoId } = req.params;
-      const { usuarioId } = req.body;
+      const { usuarioId } = req.body || {};
+
+      if (!mongoose.Types.ObjectId.isValid(habitoId)) {
+        return res.status(400).json({ message: "ID de hábito inválido" });
+      }
 
       const habitoClonado = await HabitoPrototype.clonarHabito(
         habitoId,
         usuarioId,
       );
 
-      res.json({
+      res.status(201).json({
         success: true,
+        message: "Hábito clonado exitosamente",
         data: habitoClonado,
+        habito: habitoClonado,
       });
     } catch (error) {
+      if (error.message === "Hábito no encontrado") {
+        return res.status(404).json({ message: error.message });
+      }
       res.status(500).json({ message: error.message });
     }
   }
@@ -271,7 +354,11 @@ class HabitoContorller {
   async editarHabito(req, res) {
     try {
       const { habitoId } = req.params;
-      const datosActualizados = req.body;
+      if (!mongoose.Types.ObjectId.isValid(habitoId)) {
+        return res.status(400).json({ message: "ID de hábito inválido" });
+      }
+
+      const datosActualizados = req.body || {};
       const {
         nombre,
         descripcion,
@@ -287,18 +374,26 @@ class HabitoContorller {
         usuarioId,
       } = datosActualizados;
 
+      if (nombre !== undefined && (typeof nombre !== "string" || !nombre.trim())) {
+        return res.status(400).json({ message: "El nombre del hábito no puede estar vacío" });
+      }
+
+      const camposHabito = {};
+      if (nombre !== undefined) camposHabito.nombre = nombre.trim();
+      if (descripcion !== undefined) camposHabito.descripcion = descripcion;
+      if (estado !== undefined) camposHabito.estado = estado;
+      if (horario !== undefined) camposHabito.horario = horario;
+      if (fechaInicio !== undefined) camposHabito.fechaInicio = fechaInicio;
+      if (fechaFin !== undefined) camposHabito.fechaFin = fechaFin;
+      if (diasSeleccionados !== undefined) camposHabito.diasSeleccionados = diasSeleccionados;
+      if (categoria !== undefined) {
+        const catResuelta = await this.resolverCategoriaId(categoria);
+        if (catResuelta) camposHabito.categoria = catResuelta;
+      }
+
       const habito = await Habito.findByIdAndUpdate(
         habitoId,
-        {
-          nombre,
-          descripcion,
-          estado,
-          horario,
-          fechaInicio,
-          fechaFin,
-          categoria,
-          diasSeleccionados,
-        },
+        camposHabito,
         { new: true, runValidators: true },
       )
         .populate("categoria")
@@ -344,6 +439,7 @@ class HabitoContorller {
       res.json({
         message: "Hábito actualizado correctamente",
         data: habito,
+        habito,
       });
     } catch (error) {
       res.status(500).json({
@@ -355,7 +451,14 @@ class HabitoContorller {
   async obtenerCategorias(req, res) {
     try {
       const categorias = await Categoria.find();
-      res.json({ success: true, data: categorias });
+      const data = categorias.map((cat) => {
+        const obj = cat.toObject ? cat.toObject() : cat;
+        return {
+          ...obj,
+          nombre: obj.nombreCategoria,
+        };
+      });
+      res.json({ success: true, data });
     } catch (error) {
       console.error("Error al obtener categorías:", error);
       res.status(500).json({ error: error.message });
@@ -407,7 +510,13 @@ class HabitoContorller {
   async eliminarHabito(req, res) {
     try {
       const { habitoId } = req.params;
-      const { usuarioId } = req.body;
+      const { usuarioId } = req.body || {};
+
+      if (!mongoose.Types.ObjectId.isValid(habitoId)) {
+        return res.status(400).json({
+          message: "ID de hábito inválido",
+        });
+      }
 
       // 1️⃣ Buscar hábito
       const habito = await Habito.findById(habitoId)

@@ -2,3 +2,4 @@ node_modules/
 .env
 coverage/
 .c8_output/
+.cache/

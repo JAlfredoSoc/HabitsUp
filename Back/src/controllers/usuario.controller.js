@@ -1,8 +1,11 @@
 const Usuario = require("../models/usuario.model");
 const Habito = require("../models/habito.model");
 const Progreso = require("../models/progresoHabito.model");
+const Notificacion = require("../models/notificacion.model");
+const HistorialHabito = require("../models/historialHabito.model");
 const mongoose = require("mongoose");
 const ValidacionesUsuario = require("../helper/validacionesUsuario");
+const JwtHelper = require("../helper/jwtHelper");
 
 const bcrypt = require("bcrypt");
 
@@ -103,8 +106,15 @@ class UsuarioController {
       // No enviar la contraseña en la respuesta
       const { contrasena: _, ...usuarioSinPassword } = usuario.toObject();
 
+      const token = JwtHelper.generarToken({
+        id: String(usuario._id),
+        correo: usuario.correo,
+        nombre: usuario.nombre,
+      });
+
       res.json({
         message: "Login exitoso",
+        token,
         usuario: usuarioSinPassword,
       });
     } catch (error) {
@@ -118,6 +128,9 @@ class UsuarioController {
   async editarUsuario(req, res) {
     try {
       const { usuarioID } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(usuarioID)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
       const datos = { ...req.body };
 
       const validacion = ValidacionesUsuario.validarDatosEdicion(datos);
@@ -165,10 +178,36 @@ class UsuarioController {
     }
   }
 
-  // Editar usuario por id
+  // Obtener usuario por id con validación de autenticación y propiedad
   async obtenerUsuarioPorId(req, res) {
     try {
       const { id } = req.params;
+
+      const token = JwtHelper.extraerTokenDeHeader(req.headers.authorization);
+      if (!token) {
+        return res.status(401).json({
+          message: "Token de autenticación requerido",
+        });
+      }
+
+      let payload;
+      try {
+        payload = JwtHelper.verificarToken(token);
+      } catch (err) {
+        return res.status(401).json({
+          message: "Token de autenticación inválido o expirado",
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+
+      if (String(payload.id) !== String(id)) {
+        return res.status(403).json({
+          message: "Acceso denegado: no tienes permisos para consultar el perfil de otro usuario",
+        });
+      }
 
       const usuario = await Usuario.findById(id);
 
@@ -179,9 +218,70 @@ class UsuarioController {
       // No devolver la contraseña
       const { contrasena, ...usuarioSinPassword } = usuario.toObject();
 
-      res.json(usuarioSinPassword);
+      res.json({
+        message: "Perfil obtenido exitosamente",
+        usuario: usuarioSinPassword,
+        ...usuarioSinPassword,
+      });
     } catch (error) {
       console.error("Error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  // Eliminar usuario en cascada
+  async eliminarUsuario(req, res) {
+    try {
+      const { id } = req.params;
+
+      const token = JwtHelper.extraerTokenDeHeader(req.headers.authorization);
+      if (!token) {
+        return res.status(401).json({
+          message: "Token de autenticación requerido",
+        });
+      }
+
+      let payload;
+      try {
+        payload = JwtHelper.verificarToken(token);
+      } catch (err) {
+        return res.status(401).json({
+          message: "Token de autenticación inválido o expirado",
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID de usuario inválido" });
+      }
+
+      if (String(payload.id) !== String(id)) {
+        return res.status(403).json({
+          message: "Acceso denegado: no tienes permisos para eliminar otro usuario",
+        });
+      }
+
+      const usuario = await Usuario.findById(id);
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      const habitosIds = usuario.habitos || [];
+      if (habitosIds.length > 0) {
+        await Progreso.deleteMany({ habito: { $in: habitosIds } });
+        await Notificacion.deleteMany({ habito_id: { $in: habitosIds } });
+        await HistorialHabito.deleteMany({ habito: { $in: habitosIds } });
+        await Habito.deleteMany({ _id: { $in: habitosIds } });
+      }
+
+      await HistorialHabito.deleteMany({ usuario: id });
+      await Usuario.findByIdAndDelete(id);
+
+      res.json({
+        success: true,
+        message: "Usuario y datos asociados eliminados correctamente",
+        usuarioId: id,
+      });
+    } catch (error) {
       res.status(500).json({ message: error.message });
     }
   }

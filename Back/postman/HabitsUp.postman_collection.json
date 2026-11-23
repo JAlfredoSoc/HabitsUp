@@ -1,40 +1,202 @@
 {
   "info": {
-    "name": "HabitsUp API",
-    "description": "Pruebas locales del backend HabitsUp. Ejecuta primero Registro de usuario y luego Crear hábito; la colección guarda automáticamente usuarioId y habitoId.",
+    "_postman_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+    "name": "HabitsUp API - Entregable 3 (Pruebas Automatizadas)",
+    "description": "Colección Postman v2.1 para HabitsUp (RAA3). Incluye autenticación automatizada con Pre-request a nivel de colección, CRUD completo encadenado de Usuarios y Hábitos, validación de contratos con JSON Schema, escenarios negativos de la familia 4xx (400, 401, 403, 404, 409) y Data Driven Testing (DDT) con pm.iterationData.get().",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request Script a nivel de colección: envía automáticamente el token JWT en cada petición",
+          "const skipAuth = pm.variables.get('skipAuthHeader');",
+          "const token = pm.collectionVariables.get('authToken') || pm.environment.get('authToken');",
+          "if (token && skipAuth !== 'true') {",
+          "    pm.request.headers.upsert({",
+          "        key: 'Authorization',",
+          "        value: 'Bearer ' + token",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "authToken", "value": "" },
     { "key": "usuarioId", "value": "" },
-    { "key": "habitoId", "value": "" }
+    { "key": "otroUsuarioId", "value": "507f1f77bcf86cd799439011" },
+    { "key": "habitoId", "value": "" },
+    { "key": "habitoClonadoId", "value": "" },
+    { "key": "habitoInexistenteId", "value": "507f1f77bcf86cd799439099" },
+    { "key": "categoriaId", "value": "" },
+    { "key": "correoPrueba", "value": "" },
+    { "key": "passwordPrueba", "value": "Prueba123!" },
+    { "key": "ddtNombre", "value": "Hábito DDT Lectura Diaria" },
+    { "key": "ddtDescripcion", "value": "Leer documentación técnica todos los días" },
+    { "key": "ddtPeriodo", "value": "diario" },
+    { "key": "ddtFrecuencia", "value": "2" },
+    { "key": "ddtFrecuenciaSemanal", "value": "0" }
   ],
   "item": [
     {
-      "name": "Estado",
+      "name": "1. Estado y Catalogos",
+      "description": "Pruebas de humo y consulta de catálogos base (Estado del servidor, Categorías y Sugerencias).",
       "item": [
         {
-          "name": "Health check",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" }
+          "name": "CP-16: GET /health - Verificar disponibilidad del backend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-16 [Código de estado] Responde 200 OK en health check', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-16 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-16 [Body] Retorna estado ok y marca de tiempo ISO válida', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status', 'ok');",
+                  "    pm.expect(body).to.have.property('timestamp').that.is.a('string');",
+                  "});",
+                  "",
+                  "pm.test('CP-16 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
         },
         {
-          "name": "Documentación Swagger",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api-docs" }
+          "name": "CP-17: GET /ObtenerCategoria - Consultar catalogo de categorias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-17 [Código de estado] Responde 200 OK al listar categorías', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-17 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-17 [Body] Retorna arreglo de categorías con _id y nombreCategoria y guarda categoriaId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(body.data[0]).to.have.property('_id');",
+                  "    pm.expect(body.data[0]).to.have.property('nombreCategoria');",
+                  "    pm.collectionVariables.set('categoriaId', body.data[0]._id);",
+                  "    pm.environment.set('categoriaId', body.data[0]._id);",
+                  "});",
+                  "",
+                  "pm.test('CP-17 [Contrato JSON Schema #1] Valida esquema de respuesta del catálogo de categorías', function () {",
+                  "    const schemaCategorias = {",
+                  "        type: 'object',",
+                  "        required: ['success', 'data'],",
+                  "        properties: {",
+                  "            success: { type: 'boolean' },",
+                  "            data: {",
+                  "                type: 'array',",
+                  "                minItems: 1,",
+                  "                items: {",
+                  "                    type: 'object',",
+                  "                    required: ['_id', 'nombreCategoria'],",
+                  "                    properties: {",
+                  "                        _id: { type: 'string' },",
+                  "                        nombreCategoria: { type: 'string' },",
+                  "                        nombre: { type: 'string' }",
+                  "                    }",
+                  "                }",
+                  "            }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaCategorias);",
+                  "});",
+                  "",
+                  "pm.test('CP-17 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ObtenerCategoria"
+          }
+        },
+        {
+          "name": "CP-18: GET /ObtenerSugerencias - Consultar lista de habitos sugeridos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-18 [Código de estado] Responde 200 OK al consultar sugerencias', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-18 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-18 [Body] Retorna listado de sugerencias con nombre y descripción', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(body[0]).to.have.property('nombre').that.is.a('string');",
+                  "    pm.expect(body[0]).to.have.property('descripcion').that.is.a('string');",
+                  "});",
+                  "",
+                  "pm.test('CP-18 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ObtenerSugerencias"
+          }
         }
       ]
     },
     {
-      "name": "Usuarios",
+      "name": "2. Usuarios (CRUD Encadenado y Autenticacion)",
+      "description": "Gestión completa del recurso Usuario: Registro (POST), Inicio de sesión con generación de token JWT (POST), Consulta de perfil autenticado (GET), Actualización de perfil (PUT) y consultas de estadísticas.",
       "item": [
         {
-          "name": "Registro de usuario",
+          "name": "CP-19: POST /RegistroUsuario - Registrar nueva cuenta de usuario",
           "event": [
             {
               "listen": "prerequest",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set('correoPrueba', 'usuario.prueba.' + Date.now() + '@example.com');"
+                  "const uniqueEmail = 'test_user_' + Date.now() + '_' + pm.info.iteration + '@example.test';",
+                  "pm.collectionVariables.set('correoPrueba', uniqueEmail);",
+                  "pm.environment.set('correoPrueba', uniqueEmail);"
                 ]
               }
             },
@@ -43,10 +205,52 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "  const body = pm.response.json();",
-                  "  if (body.usuario && body.usuario._id) pm.collectionVariables.set('usuarioId', body.usuario._id);",
-                  "}"
+                  "pm.test('CP-19 [Código de estado] Responde 201 Created al registrar un usuario nuevo', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('CP-19 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-19 [Body] Crea el usuario sin exponer la contraseña y encadena usuarioId', function () {",
+                  "    const body = pm.response.json();",
+                  "    const correoEsperado = pm.collectionVariables.get('correoPrueba');",
+                  "    pm.expect(body).to.have.property('message', 'Usuario registrado exitosamente');",
+                  "    pm.expect(body).to.have.property('usuario');",
+                  "    pm.expect(body.usuario).to.have.property('_id');",
+                  "    pm.expect(body.usuario).to.have.property('correo', correoEsperado);",
+                  "    pm.expect(body.usuario).to.not.have.property('contrasena');",
+                  "    pm.collectionVariables.set('usuarioId', body.usuario._id);",
+                  "    pm.environment.set('usuarioId', body.usuario._id);",
+                  "});",
+                  "",
+                  "pm.test('CP-19 [Contrato JSON Schema #2] Valida contrato de creación de usuario', function () {",
+                  "    const schemaRegistro = {",
+                  "        type: 'object',",
+                  "        required: ['message', 'usuario'],",
+                  "        properties: {",
+                  "            message: { type: 'string' },",
+                  "            usuario: {",
+                  "                type: 'object',",
+                  "                required: ['_id', 'nombre', 'correo', 'edad', 'telefono', 'habitos'],",
+                  "                properties: {",
+                  "                    _id: { type: 'string' },",
+                  "                    nombre: { type: 'string' },",
+                  "                    correo: { type: 'string' },",
+                  "                    edad: { type: 'string' },",
+                  "                    telefono: { type: 'string' },",
+                  "                    habitos: { type: 'array' }",
+                  "                }",
+                  "            }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaRegistro);",
+                  "});",
+                  "",
+                  "pm.test('CP-19 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
                 ]
               }
             }
@@ -56,98 +260,453 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Usuario Prueba\",\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"Prueba123!\",\n  \"edad\": \"25\",\n  \"telefono\": \"3001234567\"\n}",
+              "raw": "{\n  \"nombre\": \"Jose Alfredo Prueba\",\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"{{passwordPrueba}}\",\n  \"edad\": \"24\",\n  \"telefono\": \"3001234567\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/RegistroUsuario"
           }
         },
         {
-          "name": "Iniciar sesión",
+          "name": "CP-22: POST /IniciarSesion - Login exitoso y guardado de token JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-22 [Código de estado] Responde 200 OK al iniciar sesión con credenciales válidas', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-22 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-22 [Body] Retorna token JWT válido, datos de usuario sin contraseña y guarda authToken', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'Login exitoso');",
+                  "    pm.expect(body).to.have.property('token').that.is.a('string').and.is.not.empty;",
+                  "    pm.expect(body.usuario).to.have.property('_id', pm.collectionVariables.get('usuarioId'));",
+                  "    pm.expect(body.usuario).to.not.have.property('contrasena');",
+                  "    pm.collectionVariables.set('authToken', body.token);",
+                  "    pm.environment.set('authToken', body.token);",
+                  "});",
+                  "",
+                  "pm.test('CP-22 [Contrato JSON Schema #3] Valida contrato de autenticación y sesión', function () {",
+                  "    const schemaLogin = {",
+                  "        type: 'object',",
+                  "        required: ['message', 'token', 'usuario'],",
+                  "        properties: {",
+                  "            message: { type: 'string' },",
+                  "            token: { type: 'string' },",
+                  "            usuario: {",
+                  "                type: 'object',",
+                  "                required: ['_id', 'nombre', 'correo', 'edad', 'telefono'],",
+                  "                properties: {",
+                  "                    _id: { type: 'string' },",
+                  "                    nombre: { type: 'string' },",
+                  "                    correo: { type: 'string' },",
+                  "                    edad: { type: 'string' },",
+                  "                    telefono: { type: 'string' }",
+                  "                }",
+                  "            }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaLogin);",
+                  "});",
+                  "",
+                  "pm.test('CP-22 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"Prueba123!\"\n}",
+              "raw": "{\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"{{passwordPrueba}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/IniciarSesion"
           }
         },
         {
-          "name": "Editar usuario",
+          "name": "CP-24: GET /usuario/:id - Consultar perfil propio autenticado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-24 [Código de estado] Responde 200 OK al consultar perfil propio con token válido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-24 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-24 [Body] Retorna perfil del usuario autenticado sin exponer contraseña', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('_id', pm.collectionVariables.get('usuarioId'));",
+                  "    pm.expect(body).to.have.property('correo', pm.collectionVariables.get('correoPrueba'));",
+                  "    pm.expect(body).to.not.have.property('contrasena');",
+                  "});",
+                  "",
+                  "pm.test('CP-24 [Contrato JSON Schema #4] Valida contrato de perfil de usuario', function () {",
+                  "    const schemaPerfil = {",
+                  "        type: 'object',",
+                  "        required: ['_id', 'nombre', 'correo', 'edad', 'telefono', 'habitos'],",
+                  "        properties: {",
+                  "            _id: { type: 'string' },",
+                  "            nombre: { type: 'string' },",
+                  "            correo: { type: 'string' },",
+                  "            edad: { type: 'string' },",
+                  "            telefono: { type: 'string' },",
+                  "            habitos: { type: 'array' }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaPerfil);",
+                  "});",
+                  "",
+                  "pm.test('CP-24 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "CP-27: PUT /EditarUsuario/:id - Actualizar datos del perfil propio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-27 [Código de estado] Responde 200 OK al actualizar el perfil de usuario', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-27 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-27 [Body] Persiste el nuevo nombre y teléfono conservando el correo intacto', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('_id', pm.collectionVariables.get('usuarioId'));",
+                  "    pm.expect(body).to.have.property('nombre', 'Jose Alfredo Actualizado');",
+                  "    pm.expect(body).to.have.property('telefono', '3007654321');",
+                  "    pm.expect(body).to.have.property('correo', pm.collectionVariables.get('correoPrueba'));",
+                  "});",
+                  "",
+                  "pm.test('CP-27 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Usuario Prueba Actualizado\",\n  \"telefono\": \"3007654321\"\n}",
+              "raw": "{\n  \"nombre\": \"Jose Alfredo Actualizado\",\n  \"telefono\": \"3007654321\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/EditarUsuario/{{usuarioId}}"
           }
         },
         {
-          "name": "Hábitos del usuario",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/usuario/{{usuarioId}}/habitos" }
+          "name": "GET /estadisticas/:usuarioId - Consultar estadisticas del usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estadísticas [Código de estado] Responde 200 OK al consultar estadísticas', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Estadísticas [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('Estadísticas [Body] Contiene estructura de resumen, categorías y progreso', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.have.property('resumen');",
+                  "    pm.expect(body.data.resumen).to.have.property('totalHabitos');",
+                  "});",
+                  "",
+                  "pm.test('Estadísticas [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/estadisticas/{{usuarioId}}"
+          }
         },
         {
-          "name": "Total de hábitos activos",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/totalHabitosActivos/{{usuarioId}}" }
-        },
-        {
-          "name": "Historial del usuario",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/historial/{{usuarioId}}" }
-        },
-        {
-          "name": "Estadísticas del usuario",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/estadisticas/{{usuarioId}}" }
+          "name": "GET /totalHabitosActivos/:usuarioId - Consultar total de habitos activos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Total Activos [Código de estado] Responde 200 OK al consultar total de hábitos activos', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Total Activos [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('Total Activos [Body] Retorna propiedad numérica total', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('total').that.is.a('number');",
+                  "});",
+                  "",
+                  "pm.test('Total Activos [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/totalHabitosActivos/{{usuarioId}}"
+          }
         }
       ]
     },
     {
-      "name": "Hábitos",
+      "name": "3. Habitos y Progreso (CRUD Encadenado)",
+      "description": "CRUD completo y encadenado del recurso Hábito: Creación (POST), Lectura individual (GET), Listado por usuario (GET), Incremento de progreso (PUT), Clonación con Prototype (POST), Edición (PUT), Historial (GET) y Eliminación (DELETE).",
       "item": [
         {
-          "name": "Obtener categorías",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerCategoria" }
-        },
-        {
-          "name": "Obtener sugerencias",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerSugerencias" }
-        },
-        {
-          "name": "Crear hábito",
-          "event": [{
-            "listen": "test",
-            "script": {
-              "type": "text/javascript",
-              "exec": [
-                "if (pm.response.code === 201) {",
-                "  const body = pm.response.json();",
-                "  if (body.habito && body.habito._id) pm.collectionVariables.set('habitoId', body.habito._id);",
-                "}"
-              ]
+          "name": "CP-28: POST /CrearHabitos - Crear nuevo habito valido asociado al usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-28 [Código de estado] Responde 201 Created al crear un hábito nuevo', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('CP-28 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-28 [Body] Retorna hábito y progreso inicial en 0 y guarda habitoId para encadenamiento', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('habito');",
+                  "    pm.expect(body).to.have.property('progreso');",
+                  "    pm.expect(body.habito).to.have.property('_id');",
+                  "    pm.expect(body.habito).to.have.property('nombre', 'Leer 20 minutos al día');",
+                  "    pm.expect(body.progreso).to.have.property('progreso', 0);",
+                  "    pm.expect(body.progreso).to.have.property('frecuencia', 1);",
+                  "    pm.collectionVariables.set('habitoId', body.habito._id);",
+                  "    pm.environment.set('habitoId', body.habito._id);",
+                  "});",
+                  "",
+                  "pm.test('CP-28 [Contrato JSON Schema #5] Valida contrato de creación de hábito y progreso', function () {",
+                  "    const schemaHabito = {",
+                  "        type: 'object',",
+                  "        required: ['habito', 'progreso'],",
+                  "        properties: {",
+                  "            message: { type: 'string' },",
+                  "            habito: {",
+                  "                type: 'object',",
+                  "                required: ['_id', 'nombre', 'descripcion', 'estado', 'horario', 'fechaInicio'],",
+                  "                properties: {",
+                  "                    _id: { type: 'string' },",
+                  "                    nombre: { type: 'string' },",
+                  "                    descripcion: { type: 'string' },",
+                  "                    estado: { type: 'string' },",
+                  "                    horario: { type: 'string' },",
+                  "                    fechaInicio: { type: 'string' }",
+                  "                }",
+                  "            },",
+                  "            progreso: {",
+                  "                type: 'object',",
+                  "                required: ['_id', 'habito', 'periodo', 'frecuencia', 'progreso'],",
+                  "                properties: {",
+                  "                    _id: { type: 'string' },",
+                  "                    habito: { type: 'string' },",
+                  "                    periodo: { type: 'string' },",
+                  "                    frecuencia: { type: 'number' },",
+                  "                    progreso: { type: 'number' }",
+                  "                }",
+                  "            }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaHabito);",
+                  "});",
+                  "",
+                  "pm.test('CP-28 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
             }
-          }],
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Leer 10 minutos\",\n  \"descripcion\": \"Leer un libro durante 10 minutos\",\n  \"estado\": \"pendiente\",\n  \"horario\": \"2026-10-01T08:00:00.000Z\",\n  \"fechaInicio\": \"2026-09-28T00:00:00.000Z\",\n  \"fechaFin\": \"2026-12-31T23:59:59.000Z\",\n  \"periodo\": \"diario\",\n  \"frecuencia\": 1,\n  \"frecuenciaSemanal\": 5,\n  \"diasSeleccionados\": [\"Lunes\", \"Martes\", \"Miércoles\", \"Jueves\", \"Viernes\"],\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"notificacionActiva\": false,\n  \"subHabitos\": []\n}",
+              "raw": "{\n  \"nombre\": \"Leer 20 minutos al día\",\n  \"descripcion\": \"Leer un libro técnico durante 20 minutos\",\n  \"estado\": \"pendiente\",\n  \"categoria\": \"{{categoriaId}}\",\n  \"horario\": \"2026-11-23T08:00:00.000Z\",\n  \"fechaInicio\": \"2026-11-23T00:00:00.000Z\",\n  \"fechaFin\": \"2026-12-31T23:59:59.000Z\",\n  \"periodo\": \"diario\",\n  \"frecuencia\": 1,\n  \"frecuenciaSemanal\": 0,\n  \"diasSeleccionados\": [\"Lunes\", \"Martes\", \"Miércoles\", \"Jueves\", \"Viernes\"],\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"notificacionActiva\": false,\n  \"subHabitos\": []\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/CrearHabitos"
           }
         },
         {
-          "name": "Obtener hábitos (usuarioID)",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/ObtenerHabitos/{{usuarioId}}" }
+          "name": "GET /habito/:id - Consultar habito creado por ID encadenado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET Hábito [Código de estado] Responde 200 OK al consultar el hábito creado por ID', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('GET Hábito [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('GET Hábito [Body] Retorna los datos exactos del hábito encadenado', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.have.property('_id', pm.collectionVariables.get('habitoId'));",
+                  "    pm.expect(body.data).to.have.property('nombre', 'Leer 20 minutos al día');",
+                  "});",
+                  "",
+                  "pm.test('GET Hábito [Contrato JSON Schema #6] Valida contrato de detalle de hábito', function () {",
+                  "    const schemaDetalleHabito = {",
+                  "        type: 'object',",
+                  "        required: ['success', 'data'],",
+                  "        properties: {",
+                  "            success: { type: 'boolean' },",
+                  "            data: {",
+                  "                type: 'object',",
+                  "                required: ['_id', 'nombre', 'descripcion', 'estado'],",
+                  "                properties: {",
+                  "                    _id: { type: 'string' },",
+                  "                    nombre: { type: 'string' },",
+                  "                    descripcion: { type: 'string' },",
+                  "                    estado: { type: 'string' }",
+                  "                }",
+                  "            }",
+                  "        }",
+                  "    };",
+                  "    pm.response.to.have.jsonSchema(schemaDetalleHabito);",
+                  "});",
+                  "",
+                  "pm.test('GET Hábito [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/habito/{{habitoId}}"
+          }
         },
         {
-          "name": "Actualizar progreso",
+          "name": "CP-29: GET /ObtenerHabitos/:usuarioID - Listar todos los habitos del usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-29 [Código de estado] Responde 200 OK al listar hábitos del usuario', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-29 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-29 [Body] Incluye el hábito recién creado en el listado del usuario', function () {",
+                  "    const body = pm.response.json();",
+                  "    const habitoId = pm.collectionVariables.get('habitoId');",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+                  "    const encontrado = body.data.find(h => h._id === habitoId);",
+                  "    pm.expect(encontrado).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "pm.test('CP-29 [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ObtenerHabitos/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "CP-30: PUT /ActualizarProgreso/:habitoId - Incrementar progreso dentro del limite",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-30 [Código de estado] Responde 200 OK al incrementar el progreso del hábito', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-30 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-30 [Body] Incrementa el contador de progreso en 1 unidad', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'Progreso actualizado');",
+                  "    pm.expect(body.progreso).to.have.property('progreso', 1);",
+                  "});",
+                  "",
+                  "pm.test('CP-30 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -160,7 +719,37 @@
           }
         },
         {
-          "name": "Clonar hábito",
+          "name": "CP-31: POST /clonar/:habitoId - Clonar habito existente con progreso en 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-31 [Código de estado] Responde 201 Created al clonar un hábito existente', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('CP-31 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-31 [Body] Crea copia con sufijo (copia) y guarda habitoClonadoId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.have.property('_id');",
+                  "    pm.expect(body.data.nombre).to.include('(copia)');",
+                  "    pm.collectionVariables.set('habitoClonadoId', body.data._id);",
+                  "    pm.environment.set('habitoClonadoId', body.data._id);",
+                  "});",
+                  "",
+                  "pm.test('CP-31 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -173,20 +762,110 @@
           }
         },
         {
-          "name": "Editar hábito",
+          "name": "CP-32: PUT /editar/:habitoId - Editar nombre y descripcion de habito propio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-32 [Código de estado] Responde 200 OK al editar el hábito', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-32 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-32 [Body] Actualiza el nombre y descripción conservando el progreso acumulado', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'Hábito actualizado correctamente');",
+                  "    pm.expect(body.data).to.have.property('nombre', 'Leer 30 minutos al día (Editado)');",
+                  "    pm.expect(body.data.progreso).to.have.property('progreso', 1);",
+                  "});",
+                  "",
+                  "pm.test('CP-32 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Leer 15 minutos\",\n  \"descripcion\": \"Leer un libro durante 15 minutos\"\n}",
+              "raw": "{\n  \"nombre\": \"Leer 30 minutos al día (Editado)\",\n  \"descripcion\": \"Lectura profunda actualizada a 30 minutos diarios\",\n  \"usuarioId\": \"{{usuarioId}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/editar/{{habitoId}}"
           }
         },
         {
-          "name": "Eliminar hábito",
+          "name": "GET /historial/:usuario - Consultar historial de acciones del usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Historial [Código de estado] Responde 200 OK al consultar historial del usuario', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Historial [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('Historial [Body] Registra los eventos CREADO, PROGRESO_ACTUALIZADO y EDITADO', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Historial [Rendimiento] Tiempo de respuesta en consulta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/historial/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "CP-33: DELETE /eliminar/:habitoId - Eliminar habito propio y sus dependencias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-33 [Código de estado] Responde 200 OK al eliminar el hábito', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-33 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-33 [Body] Confirma la eliminación exitosa del hábito y su progreso', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body).to.have.property('message', 'Hábito eliminado correctamente');",
+                  "});",
+                  "",
+                  "pm.test('CP-33 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -196,6 +875,352 @@
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{baseUrl}}/eliminar/{{habitoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Negativos (Familia 4xx)",
+      "description": "Pruebas negativas con al menos 5 códigos distintos de la familia 4xx: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found y 409 Conflict (duplicado y regla de negocio).",
+      "item": [
+        {
+          "name": "CP-20 [400 Bad Request]: POST /RegistroUsuario - Rechazar registro con datos invalidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-20 [Código de estado] Responde 400 Bad Request ante omisión de correo obligatorio', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('CP-20 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-20 [Body] Detalla los errores de validación de entrada', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message').that.is.a('string');",
+                  "    pm.expect(body).to.have.property('errores').that.is.an('array').and.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('CP-20 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Incompleto\",\n  \"contrasena\": \"123\",\n  \"edad\": \"15\",\n  \"telefono\": \"abc\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/RegistroUsuario"
+          }
+        },
+        {
+          "name": "CP-21 [409 Conflict]: POST /RegistroUsuario - Rechazar registro con correo duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-21 [Código de estado] Responde 409 Conflict al intentar registrar un correo ya existente', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('CP-21 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-21 [Body] Informa que el correo ya está registrado', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'El correo ya está registrado');",
+                  "});",
+                  "",
+                  "pm.test('CP-21 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario Duplicado\",\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"{{passwordPrueba}}\",\n  \"edad\": \"28\",\n  \"telefono\": \"3009998877\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/RegistroUsuario"
+          }
+        },
+        {
+          "name": "CP-23 [401 Unauthorized]: POST /IniciarSesion - Rechazar login con contrasena incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-23 [Código de estado] Responde 401 Unauthorized ante contraseña errónea', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('CP-23 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-23 [Body] Retorna mensaje de contraseña incorrecta y no emite token', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'Contraseña incorrecta');",
+                  "    pm.expect(body).to.not.have.property('token');",
+                  "});",
+                  "",
+                  "pm.test('CP-23 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoPrueba}}\",\n  \"contrasena\": \"ClaveTotalmenteErronea999!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/IniciarSesion"
+          }
+        },
+        {
+          "name": "CP-25 [401 Unauthorized]: GET /usuario/:id - Rechazar consulta de perfil sin token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Remover el encabezado Authorization inyectado por la colección para probar acceso sin token",
+                  "pm.request.headers.remove('Authorization');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-25 [Código de estado] Responde 401 Unauthorized cuando no se envía token JWT', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('CP-25 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-25 [Body] Exige token de autenticación y no expone datos del usuario', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message').that.includes('Token de autenticación requerido');",
+                  "    pm.expect(body).to.not.have.property('correo');",
+                  "});",
+                  "",
+                  "pm.test('CP-25 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "CP-26 [403 Forbidden]: GET /usuario/:id - Impedir acceso al perfil de otro usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-26 [Código de estado] Responde 403 Forbidden al intentar consultar perfil de otro usuario', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('CP-26 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-26 [Body] Informa acceso denegado por falta de permisos sobre el recurso', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message').that.includes('Acceso denegado');",
+                  "});",
+                  "",
+                  "pm.test('CP-26 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario/{{otroUsuarioId}}"
+          }
+        },
+        {
+          "name": "CP-34 [404 Not Found]: GET /habito/:id - Rechazar consulta de habito inexistente o eliminado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-34 [Código de estado] Responde 404 Not Found al consultar un hábito eliminado o inexistente', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('CP-34 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-34 [Body] Retorna mensaje claro de Hábito no encontrado sin error 500', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', 'Hábito no encontrado');",
+                  "});",
+                  "",
+                  "pm.test('CP-34 [Rendimiento] Tiempo de respuesta menor a 500 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/habito/{{habitoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Data Driven Testing y Cierre CRUD",
+      "description": "Ejecución parametrizada (Data Driven Testing) leyendo datos y resultados esperados con pm.iterationData.get(), seguida de la eliminación en cascada del usuario (DELETE /usuario/:id).",
+      "item": [
+        {
+          "name": "CP-36: POST /CrearHabitos (DDT) - Creacion parametrizada con pm.iterationData.get()",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const nombreIter = pm.iterationData.get('nombreHabito') || 'Hábito DDT Por Defecto';",
+                  "const descIter = pm.iterationData.get('descripcionHabito') || 'Descripción DDT por defecto para prueba';",
+                  "const periodoIter = pm.iterationData.get('periodo') || 'diario';",
+                  "const frecIter = pm.iterationData.get('frecuencia') !== undefined ? pm.iterationData.get('frecuencia') : 2;",
+                  "const frecSemIter = pm.iterationData.get('frecuenciaSemanal') !== undefined ? pm.iterationData.get('frecuenciaSemanal') : 0;",
+                  "",
+                  "pm.collectionVariables.set('ddtNombre', nombreIter);",
+                  "pm.collectionVariables.set('ddtDescripcion', descIter);",
+                  "pm.collectionVariables.set('ddtPeriodo', periodoIter);",
+                  "pm.collectionVariables.set('ddtFrecuencia', frecIter);",
+                  "pm.collectionVariables.set('ddtFrecuenciaSemanal', frecSemIter);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = pm.iterationData.get('expectedStatus') ? Number(pm.iterationData.get('expectedStatus')) : 201;",
+                  "const expectedPeriodo = pm.iterationData.get('expectedPeriodo') || pm.collectionVariables.get('ddtPeriodo');",
+                  "const expectedFrecuencia = pm.iterationData.get('expectedFrecuencia') !== undefined ? Number(pm.iterationData.get('expectedFrecuencia')) : Number(pm.collectionVariables.get('ddtFrecuencia'));",
+                  "const expectedMessage = pm.iterationData.get('expectedMessage') || 'Hábito creado exitosamente';",
+                  "const expectedNombre = pm.iterationData.get('nombreHabito') || pm.collectionVariables.get('ddtNombre');",
+                  "",
+                  "pm.test('CP-36 [Código de estado DDT] Coincide con expectedStatus de pm.iterationData.get() (' + expectedStatus + ')', function () {",
+                  "    pm.response.to.have.status(expectedStatus);",
+                  "});",
+                  "",
+                  "pm.test('CP-36 [Content-Type DDT] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-36 [Body DDT] Verifica nombre, periodo y frecuencia esperados desde pm.iterationData.get()', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message', expectedMessage);",
+                  "    pm.expect(body.habito).to.have.property('nombre', expectedNombre);",
+                  "    pm.expect(body.progreso).to.have.property('periodo', expectedPeriodo);",
+                  "    pm.expect(body.progreso).to.have.property('frecuencia', expectedFrecuencia);",
+                  "});",
+                  "",
+                  "pm.test('CP-36 [Rendimiento DDT] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{ddtNombre}}\",\n  \"descripcion\": \"{{ddtDescripcion}}\",\n  \"estado\": \"pendiente\",\n  \"categoria\": \"{{categoriaId}}\",\n  \"horario\": \"2026-11-23T07:30:00.000Z\",\n  \"fechaInicio\": \"2026-11-23T00:00:00.000Z\",\n  \"fechaFin\": \"2026-12-31T23:59:59.000Z\",\n  \"periodo\": \"{{ddtPeriodo}}\",\n  \"frecuencia\": {{ddtFrecuencia}},\n  \"frecuenciaSemanal\": {{ddtFrecuenciaSemanal}},\n  \"diasSeleccionados\": [\"Lunes\", \"Miércoles\", \"Viernes\"],\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"notificacionActiva\": false,\n  \"subHabitos\": []\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/CrearHabitos"
+          }
+        },
+        {
+          "name": "CP-35: DELETE /usuario/:id - Eliminar cuenta de usuario en cascada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-35 [Código de estado] Responde 200 OK al eliminar cuenta de usuario en cascada', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-35 [Content-Type] El encabezado Content-Type es application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('CP-35 [Body] Confirma eliminación de usuario, hábitos y progresos asociados', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success', true);",
+                  "    pm.expect(body).to.have.property('usuarioId', pm.collectionVariables.get('usuarioId'));",
+                  "});",
+                  "",
+                  "pm.test('CP-35 [Rendimiento] Tiempo de respuesta en escritura menor a 1000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/usuario/{{usuarioId}}"
           }
         }
       ]
