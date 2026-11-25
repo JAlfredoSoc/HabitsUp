@@ -1,0 +1,48 @@
+PROYECTO FINAL - INGENIERÍA DE PRUEBAS AUTOMATIZADAS
+Universidad Popular del Cesar (UPC)
+Proyecto Web: Habits UP
+Integrantes:
+1. Jose Alfredo Maestre Manjarrez
+2. Ismael Jose Peñaloza Ortiz
+Docente: Ing. Esp. Amilkar Hernandez
+
+======================================================================
+ENLACES DEL REPOSITORIO Y CI/CD
+======================================================================
+URL del Repositorio GitHub:
+https://github.com/JAlfredoSoc/HabitsUp
+
+Rama Principal:
+main
+
+Pipeline CI/CD (GitHub Actions):
+https://github.com/JAlfredoSoc/HabitsUp/actions/workflows/tests.yml
+
+Último Commit de Entregables 1 a 6 (previo al commit del Entregable 7):
+fc4879b - Entregable 6 OK
+(Nota: Al realizar el commit final del Entregable 7, verificar el hash con `git rev-parse --short HEAD`)
+
+======================================================================
+REPORTES INCLUIDOS EN LA CARPETA reports/
+======================================================================
+1. Cobertura de Pruebas Unitarias (c8 HTML):
+   reports/coverage/index.html
+
+2. Reporte de Pruebas de API REST (Newman + newman-reporter-htmlextra):
+   reports/newman/habitsup-api-report.html
+
+3. Reporte de Pruebas E2E (Playwright POM + Asistidas por IA en Chromium y Firefox):
+   reports/playwright/index.html
+
+4. Reporte de Accesibilidad Automatizada (@axe-core/playwright):
+   reports/accessibility/axe-report.html
+   reports/accessibility/axe-report.json
+
+5. Reportes de Rendimiento y Accesibilidad (Google Lighthouse — 3 páginas clave):
+   reports/lighthouse/index.html
+   reports/lighthouse/lighthouse-pagina-inicio.html
+   reports/lighthouse/lighthouse-panel-principal-habitos.html
+   reports/lighthouse/lighthouse-panel-sugerencias.html
+
+6. Capturas de Consola y Reportes Visuales:
+   reports/evidencias/
