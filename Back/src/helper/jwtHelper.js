@@ -1,7 +1,14 @@
 const crypto = require("node:crypto");
 
 const DEFAULT_SECRET =
-  process.env.JWT_SECRET || "secret_key_de_pruebas_automatizadas_upc_2026";
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === "production"
+    ? null
+    : "secret_key_de_pruebas_automatizadas_upc_2026");
+
+if (!DEFAULT_SECRET) {
+  throw new Error("JWT_SECRET is required in production");
+}
 
 function base64UrlEncode(input) {
   const buffer = Buffer.isBuffer(input)

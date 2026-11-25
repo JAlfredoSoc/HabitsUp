@@ -12,6 +12,13 @@ const connectDB = async () => {
   const useMemory =
     process.env.USE_MEMORY_DB === "true" || !process.env.MONGO_URI;
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    (useMemory || !process.env.MONGO_URI)
+  ) {
+    throw new Error("Production requires MONGO_URI and cannot use memory DB");
+  }
+
   if (!useMemory) {
     try {
       const conn = await mongoose.connect(process.env.MONGO_URI, {
@@ -22,6 +29,9 @@ const connectDB = async () => {
       await seedInitialData();
       return conn.connection;
     } catch (error) {
+      if (process.env.NODE_ENV === "production") {
+        throw error;
+      }
       console.warn(
         `⚠️ No se pudo conectar a MONGO_URI (${error.message}). Intentando base de datos en memoria para pruebas...`
       );
@@ -49,7 +59,7 @@ const connectDB = async () => {
     return conn.connection;
   } catch (error) {
     console.error("❌ Error conectando a MongoDB:", error.message);
-    process.exit(1);
+    throw error;
   }
 };
 
